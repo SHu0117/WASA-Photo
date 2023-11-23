@@ -19,24 +19,7 @@ components:
       bearerFormat: JWT    # optional, arbitrary value for documentation purposes
 
   parameters:
-    
-    pid:
-      schema: { $ref:  "#/components/schemas/Photo/properties/id"}
-      name: id
-      in: path
-      required: true
-      description: Photo ID
-      
-    
-      
-    username:
-      schema:
-        type: string
-      name: username
-      in: path
-      required: true
-      description: Username
-      
+
     uid:
       schema:
         type: integer
@@ -44,15 +27,8 @@ components:
       in: path
       required: true
       description: identifier for users
-      
-    cid:
-      schema:
-        type: integer
-      name: cid
-      in: path
-      required: true
-      description: identifier for comments
-      
+    
+    
     
   schemas:
   
@@ -67,7 +43,7 @@ components:
         username:
           type: string
           example: SiweiHu
-          pattern: 'ˆ.*?$'
+          pattern: '^.*?$'
           minLength: 3
           maxLength: 16
           readOnly: false
@@ -207,7 +183,7 @@ paths:
   
   /users/{uid}/homepage/:
     parameters:
-      - $ref:  "#/components/parameters/uid"
+      - {$ref:  "#/components/parameters/uid"}
     get:
       security:
         - bearerAuth: []         # use the same name as above
@@ -230,7 +206,7 @@ paths:
   
   /users/{uid}/:
     parameters:
-       - $ref: "#/components/parameters/uid"
+       - {$ref: "#/components/parameters/uid"}
     
     get:
       tags:
@@ -245,9 +221,7 @@ paths:
           description: profile informations successfully obtained
           content:
             application/json:
-              schema:
-                type: object
-                items: { $ref: "#/components/schemas/Profile"}
+              schema: { $ref: "#/components/schemas/Profile"}
         "400": 
           description: The request was not compliant with the documentation (eg. missing fields, etc).
         "404": 
@@ -290,7 +264,7 @@ paths:
   
   /users/{uid}/photos/:
     parameters: 
-      - $ref: "#/components/parameters/uid"
+      - {$ref: "#/components/parameters/uid"}
       
     post:
       security:
@@ -319,11 +293,13 @@ paths:
     parameters: 
       - name: uid
         in: path
-        schema : {$ref: "#/components/parameters/uid"}
+        schema : 
+          type: integer
         required: true
       - name: pid
         in: path
-        schema : {$ref: "#/components/parameters/pid"}
+        schema : 
+          type: integer
         required: true
     
     get:
@@ -358,15 +334,22 @@ paths:
           description: The server encountered an internal error. Further info in server logs.
 
 
-  /users/{uid}/photos/{pid}/likes/:
+  /users/{uid}/photos/{pid}/likes/{likeuid}:
     parameters: 
       - name: uid
         in: path
-        schema : {$ref: "#/components/parameters/uid"}
+        schema : 
+          type: integer
         required: true
       - name: pid
         in: path
-        schema : {$ref: "#/components/parameters/pid"}
+        schema : 
+          type: integer
+        required: true
+      - name: likeuid
+        in: path
+        schema : 
+          type: integer
         required: true
     
     put:
@@ -376,11 +359,7 @@ paths:
         - photo
       operationId: likePhoto
       summary: put a like to a photo
-      description: id of the user will be added to the collection likes
-      requestBody:
-        content:
-          application/json:
-            schema: { $ref : "#/components/schemas/uid"}
+      description: id of the user of like will be added to the collection likes
       responses:
         '201':
           description:  operation successfull
@@ -389,17 +368,6 @@ paths:
               schema: { $ref : "#/components/schemas/uid"}
               
               
-
-  /users/{uid}/photos/{pid}/likes/{uid}:
-    parameters: 
-      - name: uid
-        in: path
-        schema : {$ref: "#/components/parameters/uid"}
-        required: true
-      - name: pid
-        in: path
-        schema : {$ref: "#/components/parameters/pid"}
-        required: true
     delete:
       security:
           - bearerAuth: []
@@ -411,12 +379,19 @@ paths:
       responses:
         '204':
           description:  operation successfull
-      
-    
-  /users/{uid}/following/:    
-    parameters: 
-      - $ref: "#/components/parameters/uid"
-    
+  
+  /users/{uid}/following/{followeduid}: 
+    parameters:
+      - name: uid
+        in: path
+        schema : 
+          type: integer
+        required: true
+      - name: followeduid
+        in: path
+        schema : 
+          type: integer
+        required: true
     put:
       security:
           - bearerAuth: []
@@ -424,21 +399,14 @@ paths:
         - user
       operationId: followUser
       summary: follow a user
-      description: id of the user will be added to the collection following
-      requestBody:
-        content:
-          application/json:
-            schema: { $ref : "#/components/schemas/uid"}
+      description: id of the user to follow will be added to the collection following
       responses:
         '201':
           description:  operation successfull
           content:
             application/json:
               schema: { $ref : "#/components/schemas/uid"}
-  
-  /users/{uid}/following/{uid}: 
-    parameters: 
-      - $ref: "#/components/parameters/uid"
+              
     delete:
       security:
           - bearerAuth: []
@@ -451,15 +419,56 @@ paths:
         '204':
           description:  operation successfull
           
+  /users/{uid}/followers/{followeruid}: 
+    parameters:
+      - name: uid
+        in: path
+        schema : 
+          type: integer
+        required: true
+      - name: followeruid
+        in: path
+        schema : 
+          type: integer
+        required: true
+    put:
+      security:
+          - bearerAuth: []
+      tags:
+        - user
+      operationId: followerUser
+      summary: follow a user
+      description: id of the user following user with uid will be added to the collection following
+      responses:
+        '201':
+          description:  operation successfull
+          content:
+            application/json:
+              schema: { $ref : "#/components/schemas/uid"}
+              
+    delete:
+      security:
+          - bearerAuth: []
+      tags:
+        - user
+      operationId: deleteFollowerUser
+      summary: remove a user from following
+      description: id of the user will be deleted from the collection following
+      responses:
+        '204':
+          description:  operation successfull
+          
   /users/{uid}/photos/{pid}/comments/:
     parameters: 
       - name: uid
         in: path
-        schema : {$ref: "#/components/parameters/uid"}
+        schema : 
+          type: integer
         required: true
       - name: pid
         in: path
-        schema : {$ref: "#/components/parameters/pid"}
+        schema : 
+          type: string
         required: true
       
     post:
@@ -487,15 +496,18 @@ paths:
     parameters: 
       - name: uid
         in: path
-        schema : {$ref: "#/components/parameters/uid"}
+        schema : 
+          type: integer
         required: true
       - name: pid
         in: path
-        schema : {$ref: "#/components/parameters/pid"}
+        schema : 
+          type: string
         required: true
       - name: cid
         in: path
-        schema : {$ref: "#/components/parameters/cid"}
+        schema : 
+          type: integer
         required: true
       
     delete:
@@ -510,9 +522,20 @@ paths:
         '204':
           description:  operation successfull
           
-  /users/{uid}/banned/:
+
+              
+  /users/{uid}/banned/{banneduid}:
     parameters: 
-      - $ref: "#/components/parameters/uid"
+      - name: uid
+        in: path
+        schema : 
+          type: integer
+        required: true
+      - name: banneduid
+        in: path
+        schema : 
+          type: integer
+        required: true
     
     put:
       security:
@@ -521,11 +544,7 @@ paths:
         - user
       operationId: banUser
       summary: ban a user
-      description: id of the user will be added to the collection banned
-      requestBody:
-        content:
-          application/json:
-            schema: { $ref : "#/components/schemas/uid"}
+      description: id of the user to ban will be added to the collection banned
       responses:
         '201':
           description:  operation successfull
@@ -533,9 +552,6 @@ paths:
             application/json:
               schema: { $ref : "#/components/schemas/uid"}
               
-  /users/{uid}/banned/{uid}:
-    parameters: 
-      - $ref: "#/components/parameters/uid"
     delete:
       security:
           - bearerAuth: []
@@ -555,43 +571,7 @@ paths:
               
               
               
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
+                
               
               
 #              
