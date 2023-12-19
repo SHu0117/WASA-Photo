@@ -1,11 +1,12 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"WasaPhoto-1985972/service/database"
 	"WasaPhoto-1985972/service/api/reqcontext"
+	"strconv"
+	"errors"
 )
 
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -16,14 +17,14 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 	var following Following
-	following.Follower_id := uint64(pathId)
+	following.Follower_id = uint64(pathId)
 
-	if follwing.Follower_id == "" {
+	if following.Follower_id == 0{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dbfollowing, err := rt.db.ExistUID(follwing.Follower_id )
+	err = rt.db.ExistUID(following.Follower_id )
 	if errors.Is(err, database.ErrDataDoesNotExist){
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -34,13 +35,13 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	following.Followed_id := uint64(pathFollowedId)
-	if follwing.Followed_id == "" {
+	following.Followed_id = uint64(pathFollowedId)
+	if following.Followed_id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dbfollowing, err := rt.db.ExistUID(following.Followed_id )
+	err = rt.db.ExistUID(following.Followed_id )
 	if errors.Is(err, database.ErrDataDoesNotExist){
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -59,7 +60,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 
-	dbfollowing, err := rt.db.UnfollowUser(Following.FollowingToDatabase())
+	err = rt.db.UnfollowUser(following.FollowingToDatabase())
 	if err != nil {
 		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
 		// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
@@ -68,10 +69,5 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Here we can re-use `fountain` as FromDatabase is overwriting every variabile in the structure.
-	following.FollowingFromDatabase(dbfollowing)
-
-	// Send the output to the user.
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(following)
+	
 }

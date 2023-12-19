@@ -66,21 +66,21 @@ type Photo struct{
 }
 
 func (p *Photo) PhotoFromDatabase(photo database.Photo){
-	p.ID = photo.id,				
-	p.User_id = photo.User_id,
-	p.N_likes = photo.N_likes,
-	p.N_comments = photo.N_comments,
-	p.Upload_time = phot.Upload_time,
+	p.ID = photo.ID	
+	p.User_id = photo.User_id
+	p.N_likes = photo.N_likes
+	p.N_comments = photo.N_comments
+	p.Upload_time = photo.Upload_time
 }
 
 
 func (p *Photo) PhotoToDatabase() database.Photo{
 	return database.Photo{
-		p.ID :			photo.ID,
-		p.User_id :		photo.User_id,
-		p.N_likes 	: 	photo.N_likes,
-		p.N_comments :	photo.N_comments,
-		p.Upload_time : photo.Upload_time,
+		ID :			p.ID,
+		User_id :		p.User_id,
+		N_likes 	: 	p.N_likes,
+		N_comments :	p.N_comments,
+		Upload_time : 	p.Upload_time,
 	}
 }
 

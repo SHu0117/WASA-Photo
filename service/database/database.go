@@ -74,8 +74,8 @@ type AppDatabase interface {
 	UnfollowUser(Following) error
 	BanUser(Banning) (Banning, error)
 	UnbanUser(Banning) error
-	ExistUsername(username string) (User, error)
-	ExistUID(id uint64) (User, error)
+	ExistUsername(username string) (error)
+	ExistUID(id uint64) (error)
 	ListFollowers(u User)([]User, error)
 	ListFollowed(u User)([]User, error)
 	ListBanned(u User)([]User, error)
