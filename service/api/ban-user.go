@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"errors"
+	"WasaPhoto-1985972/service/database"
+	"WasaPhoto-1985972/service/api/reqcontext"
 )
 
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -22,7 +24,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	dbbanning1, err := rt.db.ExistUID(banning.Banner_id )
+	dbbanning, err := rt.db.ExistUID(banning.Banner_id )
 	if errors.Is(err, database.ErrDataDoesNotExist){
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -40,7 +42,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	dbbanning2, err := rt.db.ExistUID(banning.Banned_id)
+	dbbanning, err = rt.db.ExistUID(banning.Banned_id)
 	if errors.Is(err, database.ErrDataDoesNotExist){
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -58,7 +60,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	dbbanning, err := rt.db.BanUser(Banning.BanningToDatabase())
+	dbbanning, err = rt.db.BanUser(Banning.BanningToDatabase())
 	if err != nil {
 		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
 		// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.

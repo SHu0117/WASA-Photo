@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/sapienzaapps/fantastic-coffee-decaffeinated.git/service/api/reqcontext"
+	"WasaPhoto-1985972/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )

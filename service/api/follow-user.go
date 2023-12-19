@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"WasaPhoto-1985972/service/database"
+	"WasaPhoto-1985972/service/api/reqcontext"
+	"strconv"
+	"errors"
 )
 
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -14,14 +18,14 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 	var following Following
-	following.Follower_id := uint64(pathId)
+	following.Follower_id = uint64(pathId)
 
-	if follwing.Follower_id == "" {
+	if following.Follower_id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dbfollowing, err := rt.db.ExistUID(follwing.Follower_id )
+	dbfollowing, err := rt.db.ExistUID(following.Follower_id )
 	if errors.Is(err, database.ErrDataDoesNotExist){
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -32,8 +36,8 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	following.Followed_id := uint64(pathFollowedId)
-	if follwing.Followed_id == "" {
+	following.Followed_id = uint64(pathFollowedId)
+	if following.Followed_id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

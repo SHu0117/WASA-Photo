@@ -5,9 +5,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
+	"WasaPhoto-1985972/service/database"
+	"WasaPhoto-1985972/service/api/reqcontext"
 )
 
-func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	
 	pathId, err := strconv.Atoi(ps.ByName("uid"))
 	if err != nil {

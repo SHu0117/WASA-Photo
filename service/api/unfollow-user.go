@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"WasaPhoto-1985972/service/database"
+	"WasaPhoto-1985972/service/api/reqcontext"
 )
 
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {

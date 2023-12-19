@@ -2,7 +2,7 @@ package api
 
 import(
 	"time"
-	"github.com/sapienzaapps/fantastic-coffee-decaffeinated.git/service/database"
+	"WasaPhoto-1985972/service/database"
 )
 
 type User struct {
@@ -12,7 +12,7 @@ type User struct {
 
 func (u *User) UserFromDatabase(user database.User) {
 	u.ID = user.ID
-	u.Latitude = user.Latitude
+	u.Username = user.Username
 }
 
 func (u *User) UserToDatabase() database.User {
@@ -25,7 +25,7 @@ func (u *User) UserToDatabase() database.User {
 
 type Following struct {
 	Follower_id    uint64  `json:"follower_id"`
-	Followed_id    string  `json:"followed_id"`
+	Followed_id    uint64 `json:"followed_id"`
 }
 
 func (f *Following) FollowingFromDatabase(following database.Following) {
@@ -35,7 +35,7 @@ func (f *Following) FollowingFromDatabase(following database.Following) {
 
 func (following *Following) FollowingToDatabase() database.Following {
 	return database.Following{
-		Follower_id:        followinf.Follower_id,
+		Follower_id:        following.Follower_id,
 		Followed_id:  		following.Followed_id,
 	}
 }
@@ -51,7 +51,7 @@ func (b *Banning) BanningFromDatabase(banning database.Banning) {
 }
 
 func (banning *Banning) BanningToDatabase() database.Banning {
-	return database.Following{
+	return database.Banning{
 		Banner_id:          banning.Banner_id,
 		Banned_id:  		banning.Banned_id,
 	}
@@ -66,11 +66,11 @@ type Photo struct{
 }
 
 func (p *Photo) PhotoFromDatabase(photo database.Photo){
-	p.ID = photo.id						
-	p.User_id = photo.User_id
-	p.N_likes = photo.N_likes
-	p.N_comments = photo.N_comments
-	p.Upload_time = phot.Upload_time
+	p.ID = photo.id,				
+	p.User_id = photo.User_id,
+	p.N_likes = photo.N_likes,
+	p.N_comments = photo.N_comments,
+	p.Upload_time = phot.Upload_time,
 }
 
 

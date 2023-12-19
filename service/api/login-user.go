@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"WasaPhoto-1985972/service/database"
+	"WasaPhoto-1985972/service/api/reqcontext"
+	"errors"
 	
 )
 
@@ -17,9 +20,9 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	} 
 
-	dbuser, err := rt.db.Exist(user.Username )
+	dbuser, err := rt.db.ExistUsername(user.Username )
 	if errors.Is(err, database.ErrDataDoesNotExist) {
-		dbuser, err := rt.db.NewUser(user.UserToDatabase())
+		dbuser, err = rt.db.NewUser(user.UserToDatabase())
 		if err != nil {
 			// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
 			// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.

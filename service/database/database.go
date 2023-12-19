@@ -46,7 +46,7 @@ type User struct {
 
 type Photo struct {
 	ID           uint64
-	User		 uint64
+	User_id		 uint64
 	N_likes	     int64
 	N_comments   int64
 	Upload_time  time.Time
