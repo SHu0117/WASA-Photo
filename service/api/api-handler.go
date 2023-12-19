@@ -12,6 +12,8 @@ func (rt *_router) Handler() http.Handler {
 
 
 	rt.router.POST("/sessions", rt.wrap(rt.doLogin))
+
+	rt.router.POST("/users/:uid/photo", rt.wrap(rt.uploadPhoto))
 	
 	rt.router.PUT("/users/:uid/following/:followeduid", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:uid/following/:followeduid", rt.wrap(rt.unfollowUser))
