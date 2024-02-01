@@ -1,16 +1,17 @@
 package api
 
 import (
-	"github.com/julienschmidt/httprouter"
+	"errors"
 	"net/http"
 	"strconv"
-	"WasaPhoto-1985972/service/database"
-	"WasaPhoto-1985972/service/api/reqcontext"
-	"errors"
+
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/database"
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	
+
 	pathId, err := strconv.Atoi(ps.ByName("uid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -23,8 +24,8 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = rt.db.ExistUID(banning.Banner_id )
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	err = rt.db.ExistUID(banning.Banner_id)
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -41,12 +42,12 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	err = rt.db.ExistUID(banning.Banned_id)
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	auth := checkAutorization(r.Header.Get("Authorization"), banning.Banner_id)
+	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
@@ -62,10 +63,9 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	if err != nil {
 		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
 		// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
-		ctx.Logger.WithError(err).Error("can't follow")
+		ctx.Logger.WithError(err).Error("can't ban")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	
 }

@@ -3,8 +3,8 @@ package database
 // upload photo and returns photoId
 func (db *appdbimpl) UploadPhoto(p Photo) (Photo, error) {
 
-	res, err := db.c.Exec("INSERT INTO photo (user_id, n_likes, n_comments, upload_time) VALUES (?, 0, 0, ?)",
-		p.User_id, p.Upload_time)
+	res, err := db.c.Exec("INSERT INTO photo (user_id, file, upload_time) VALUES (?, ?, ?)",
+		p.User_id, p.File, p.Upload_time)
 
 	if err != nil {
 		// Error executing query
@@ -16,7 +16,6 @@ func (db *appdbimpl) UploadPhoto(p Photo) (Photo, error) {
 		return p, err
 	}
 
-
-	p.ID= uint64(lastInsertID)
+	p.ID = uint64(lastInsertID)
 	return p, nil
 }

@@ -1,4 +1,4 @@
-module WasaPhoto-1985972
+module github.com/SHu0117/WASA-Photo
 
 go 1.17
 

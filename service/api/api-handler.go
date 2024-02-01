@@ -4,18 +4,16 @@ import (
 	"net/http"
 )
 
-// 
 func (rt *_router) Handler() http.Handler {
-	
+
 	rt.router.GET("/", rt.getHelloWorld)
 	rt.router.GET("/context", rt.wrap(rt.getContextReply))
 
-
 	rt.router.POST("/sessions", rt.wrap(rt.doLogin))
 
-	
 	rt.router.POST("/users/:uid/photo", rt.wrap(rt.uploadPhoto))
-	
+	rt.router.DELETE("/users/:uid/photo/:pid", rt.wrap(rt.deletePhoto))
+
 	rt.router.PUT("/users/:uid/following/:followeduid", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:uid/following/:followeduid", rt.wrap(rt.unfollowUser))
 

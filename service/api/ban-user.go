@@ -2,16 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
+	"errors"
 	"net/http"
 	"strconv"
-	"errors"
-	"WasaPhoto-1985972/service/database"
-	"WasaPhoto-1985972/service/api/reqcontext"
+
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/database"
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	
+
 	pathId, err := strconv.Atoi(ps.ByName("uid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -24,8 +25,8 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = rt.db.ExistUID(banning.Banner_id )
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	err = rt.db.ExistUID(banning.Banner_id)
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -43,12 +44,12 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	err = rt.db.ExistUID(banning.Banned_id)
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	auth := checkAutorization(r.Header.Get("Authorization"), banning.Banner_id)
+	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
@@ -69,12 +70,11 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	
-
 	// Here we can re-use `fountain` as FromDatabase is overwriting every variabile in the structure.
 	banning.BanningFromDatabase(dbbanning)
 
 	// Send the output to the user.
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(banning)
 }

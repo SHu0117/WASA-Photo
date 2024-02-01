@@ -4,7 +4,7 @@ func (db *appdbimpl) ListBanned(user User) ([]User, error) {
 
 	rows, err := db.c.Query("SELECT u.id, u.username FROM users u, banning b WHERE b.banner_id = ? and b.banned_id = u.id", user.ID)
 	if err != nil {
-		return nil, err
+		return nil, rows.Err()
 	}
 	// Wait for the function to finish before closing rows.
 	defer func() { _ = rows.Close() }()

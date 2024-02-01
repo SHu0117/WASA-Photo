@@ -1,13 +1,14 @@
 package api
 
-import(
+import (
 	"time"
-	"WasaPhoto-1985972/service/database"
+
+	"github.com/SHu0117/WASA-Photo/service/database"
 )
 
 type User struct {
-	ID        uint64  `json:"id"`
-	Username  string  `json:"username"`
+	ID       uint64 `json:"id"`
+	Username string `json:"username"`
 }
 
 func (u *User) UserFromDatabase(user database.User) {
@@ -17,15 +18,14 @@ func (u *User) UserFromDatabase(user database.User) {
 
 func (u *User) UserToDatabase() database.User {
 	return database.User{
-		ID:        u.ID,
-		Username:  u.Username,
+		ID:       u.ID,
+		Username: u.Username,
 	}
 }
 
-
 type Following struct {
-	Follower_id    uint64  `json:"follower_id"`
-	Followed_id    uint64 `json:"followed_id"`
+	Follower_id uint64 `json:"follower_id"`
+	Followed_id uint64 `json:"followed_id"`
 }
 
 func (f *Following) FollowingFromDatabase(following database.Following) {
@@ -35,14 +35,14 @@ func (f *Following) FollowingFromDatabase(following database.Following) {
 
 func (following *Following) FollowingToDatabase() database.Following {
 	return database.Following{
-		Follower_id:        following.Follower_id,
-		Followed_id:  		following.Followed_id,
+		Follower_id: following.Follower_id,
+		Followed_id: following.Followed_id,
 	}
 }
 
 type Banning struct {
-	Banner_id    uint64  `json:"banner_id"`
-	Banned_id    uint64  `json:"banned_id"`
+	Banner_id uint64 `json:"banner_id"`
+	Banned_id uint64 `json:"banned_id"`
 }
 
 func (b *Banning) BanningFromDatabase(banning database.Banning) {
@@ -52,36 +52,34 @@ func (b *Banning) BanningFromDatabase(banning database.Banning) {
 
 func (banning *Banning) BanningToDatabase() database.Banning {
 	return database.Banning{
-		Banner_id:          banning.Banner_id,
-		Banned_id:  		banning.Banned_id,
+		Banner_id: banning.Banner_id,
+		Banned_id: banning.Banned_id,
 	}
 }
 
-type Photo struct{
-	ID 			uint64			
-	User_id 	uint64			
-	N_likes 	int64
-	N_comments 	int64
-	Upload_time	time.Time
+type Photo struct {
+	ID          uint64    `json:"id"`
+	User_id     uint64    `json:"userId"`
+	N_likes     int64     `json:"likesN"`
+	N_comments  int64     `json:"commentsN"`
+	Upload_time time.Time `json:"uploadtime"`
+	File        []byte    `json:"file"`
 }
 
-func (p *Photo) PhotoFromDatabase(photo database.Photo){
-	p.ID = photo.ID	
+func (p *Photo) PhotoFromDatabase(photo database.Photo) {
+	p.ID = photo.ID
 	p.User_id = photo.User_id
 	p.N_likes = photo.N_likes
 	p.N_comments = photo.N_comments
 	p.Upload_time = photo.Upload_time
 }
 
-
-func (p *Photo) PhotoToDatabase() database.Photo{
+func (p *Photo) PhotoToDatabase() database.Photo {
 	return database.Photo{
-		ID :			p.ID,
-		User_id :		p.User_id,
-		N_likes 	: 	p.N_likes,
-		N_comments :	p.N_comments,
-		Upload_time : 	p.Upload_time,
+		ID:          p.ID,
+		User_id:     p.User_id,
+		N_likes:     p.N_likes,
+		N_comments:  p.N_comments,
+		Upload_time: p.Upload_time,
 	}
 }
-
-

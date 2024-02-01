@@ -1,16 +1,17 @@
 package api
 
 import (
-	"github.com/julienschmidt/httprouter"
-	"net/http"
-	"WasaPhoto-1985972/service/database"
-	"WasaPhoto-1985972/service/api/reqcontext"
-	"strconv"
 	"errors"
+	"net/http"
+	"strconv"
+
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/database"
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	
+
 	pathId, err := strconv.Atoi(ps.ByName("uid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -19,13 +20,13 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	var following Following
 	following.Follower_id = uint64(pathId)
 
-	if following.Follower_id == 0{
+	if following.Follower_id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err = rt.db.ExistUID(following.Follower_id )
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	err = rt.db.ExistUID(following.Follower_id)
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -41,13 +42,13 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	err = rt.db.ExistUID(following.Followed_id )
-	if errors.Is(err, database.ErrDataDoesNotExist){
+	err = rt.db.ExistUID(following.Followed_id)
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	auth := checkAutorization(r.Header.Get("Authorization"), following.Follower_id)
+	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
@@ -59,7 +60,6 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-
 	err = rt.db.UnfollowUser(following.FollowingToDatabase())
 	if err != nil {
 		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
@@ -69,5 +69,4 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	
 }

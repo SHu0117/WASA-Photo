@@ -3,14 +3,15 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"image/png"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
-	"WasaPhoto-1985972/service/api/reqcontext"
 
-
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/database"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -23,16 +24,20 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	err = rt.db.ExistUID(uint64(pathId))
+	if errors.Is(err, database.ErrDataDoesNotExist) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	var photo Photo
 	photo.User_id = uint64(pathId)
 	photo.Upload_time = time.Now().UTC()
-	auth := checkAutorization(r.Header.Get("Authorization"), photo.User_id)
+	auth := checkAuthorization(r.Header.Get("Authorization"), photo.User_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
 	}
-
-	
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -49,11 +54,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("body contains file that is not png")
 		_ = json.NewEncoder(w).Encode("images must be png")
-		return 
+		return
 	}
 
 	// Body has been read in the previous function so it's necessary to reassign a io.ReadCloser to it
 	r.Body = io.NopCloser(bytes.NewBuffer(data))
+
+	photo.File = data
 
 	// Generate a unique id for the photo
 	dbPhoto, err := rt.db.UploadPhoto(photo.PhotoToDatabase())

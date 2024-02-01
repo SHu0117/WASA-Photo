@@ -40,16 +40,17 @@ import (
 var ErrDataDoesNotExist = errors.New("data does not exist")
 
 type User struct {
-	ID        uint64
-	Username  string
+	ID       uint64
+	Username string
 }
 
 type Photo struct {
-	ID           uint64
-	User_id		 uint64
-	N_likes	     int64
-	N_comments   int64
-	Upload_time  time.Time
+	ID          uint64
+	User_id     uint64
+	File        []byte
+	N_likes     int64
+	N_comments  int64
+	Upload_time time.Time
 }
 
 type Following struct {
@@ -62,8 +63,6 @@ type Banning struct {
 	Banned_id uint64
 }
 
-
-
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	NewUser(User) (User, error)
@@ -74,12 +73,14 @@ type AppDatabase interface {
 	UnfollowUser(Following) error
 	BanUser(Banning) (Banning, error)
 	UnbanUser(Banning) error
-	ExistUsername(username string) (error)
-	ExistUID(id uint64) (error)
-	ListFollowers(u User)([]User, error)
-	ListFollowed(u User)([]User, error)
-	ListBanned(u User)([]User, error)
+	ExistUsername(username string) error
+	ExistUID(id uint64) error
+	ExistPhoto(id uint64) error
+	ListFollowers(u User) ([]User, error)
+	ListFollowed(u User) ([]User, error)
+	ListBanned(u User) ([]User, error)
 	CheckBanned(user User, banned User) (User, error)
+	DeletePhoto(id uint64) error
 
 	Ping() error
 }
@@ -140,8 +141,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		sqlStmt := `CREATE TABLE photo(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
-			n_likes INTEGER NOT NULL,
-			n_comments INTEGER NOT NULL,
+			file BLOB
 			upload_time DATETIME,
 			FOREIGN KEY(user_id) REFERENCES users(id));`
 		_, err = db.Exec(sqlStmt)

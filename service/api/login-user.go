@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"WasaPhoto-1985972/service/database"
-	"WasaPhoto-1985972/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/database"
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
 	"errors"
 	
 )

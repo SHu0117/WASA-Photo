@@ -11,7 +11,7 @@ func (db *appdbimpl) SetUsername(u User, username string) error {
 	if err != nil {
 		return err
 	} else if affected == 0 {
-		// If we didn't delete any row, then the user didn't exist
+		// If we didn't changed any row, then the user didn't exist
 		return ErrDataDoesNotExist
 	}
 	return nil

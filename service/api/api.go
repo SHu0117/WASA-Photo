@@ -38,7 +38,7 @@ package api
 
 import (
 	"errors"
-	"WasaPhoto-1985972/service/database"
+	"github.com/SHu0117/WASA-Photo/service/database"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 	"net/http"

@@ -4,7 +4,7 @@ func (db *appdbimpl) ListFollowed(user User) ([]User, error) {
 
 	rows, err := db.c.Query("SELECT u.id, u.username FROM users u, following f WHERE f.follower_id = ? and f.followed_id = u.id", user.ID)
 	if err != nil {
-		return nil, err
+		return nil, rows.Err()
 	}
 	// Wait for the function to finish before closing rows.
 	defer func() { _ = rows.Close() }()
@@ -21,7 +21,7 @@ func (db *appdbimpl) ListFollowed(user User) ([]User, error) {
 	}
 
 	if rows.Err() != nil {
-		return nil, err
+		return nil, rows.Err()
 	}
 
 	return followedUsers, nil

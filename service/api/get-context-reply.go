@@ -1,7 +1,7 @@
 package api
 
 import (
-	"WasaPhoto-1985972/service/api/reqcontext"
+	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
