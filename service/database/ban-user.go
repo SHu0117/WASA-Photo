@@ -1,7 +1,7 @@
 package database
 
 func (db *appdbimpl) BanUser(b Banning) (Banning, error) {
-	res, err := db.c.Exec(`INSERT INTO following (banner_id, banned_id) VALUES (?, ?)`,
+	res, err := db.c.Exec(`INSERT INTO banning (Banner_id, Banned_id) VALUES (?, ?)`,
 		b.Banner_id, b.Banned_id)
 	if err != nil {
 		return b, err

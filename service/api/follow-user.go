@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
 	"github.com/SHu0117/WASA-Photo/service/database"
@@ -13,41 +12,92 @@ import (
 
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	pathId, err := strconv.Atoi(ps.ByName("uid"))
+	var user User
+
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	user.UserFromDatabase(dbuser)
+
 	var following Following
-	following.Follower_id = uint64(pathId)
+	following.Follower_id = user.ID
+
+	pathFollowUsername := ps.ByName("followUsername")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dbuser, err = rt.db.GetUserID(pathFollowUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user.UserFromDatabase(dbuser)
+	following.Followed_id = user.ID
+
+	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(following.Follower_id))
+	if auth != 0 {
+		w.WriteHeader(auth)
+		return
+	}
+
+	// Check if the user is trying to ban himself/herself
+	if pathUsername == pathFollowUsername {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	dbfollowing, err := rt.db.FollowUser(following.FollowingToDatabase())
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't follow")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Here we can re-use `follow` as FromDatabase is overwriting every variabile in the structure.
+	following.FollowingFromDatabase(dbfollowing)
+
+	// Send the output to the user.
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(following)
+}
+
+func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	var user User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user.UserFromDatabase(dbuser)
+	var following Following
+	following.Follower_id = user.ID
 
 	if following.Follower_id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err = rt.db.ExistUID(following.Follower_id)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	pathFollowedId, err := strconv.Atoi(ps.ByName("uid"))
+	pathFollowUsername := ps.ByName("followUsername")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	following.Followed_id = uint64(pathFollowedId)
-	if following.Followed_id == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
+	dbuser, err = rt.db.GetUserID(pathFollowUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = rt.db.ExistUID(following.Followed_id)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
+	user.UserFromDatabase(dbuser)
+	following.Followed_id = user.ID
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
@@ -55,26 +105,60 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	// Check if the user is trying to follow himself/herself
-	if pathId == pathFollowedId {
+	// Check if the user is trying to ban himself/herself
+	if pathUsername == pathFollowUsername {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	dbfollowing, err := rt.db.FollowUser(following.FollowingToDatabase())
-	if err != nil {
-		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
-		// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
-		ctx.Logger.WithError(err).Error("can't follow")
+	err = rt.db.UnfollowUser(following.FollowingToDatabase())
+	if errors.Is(err, database.ErrDataDoesNotExist) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
+		ctx.Logger.WithError(err).Error("can't unfollow")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// Here we can re-use `fountain` as FromDatabase is overwriting every variabile in the structure.
-	following.FollowingFromDatabase(dbfollowing)
+}
 
-	// Send the output to the user.
+func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	var list []database.User
+	var user User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user.UserFromDatabase(dbuser)
+	requesterID := getToken(r.Header.Get("Authorization"))
+	err = rt.db.ExistUID(requesterID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	if err != nil {
+		if errors.Is(err, database.ErrUserHasBeenBanned) {
+			ctx.Logger.WithError(err).Error("can't get list")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+	dblist, err := rt.db.ListFollowed(user.UserToDatabase())
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	list = dblist
+	// set the header and return output
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(following)
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(list)
 }

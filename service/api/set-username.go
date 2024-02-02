@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
 	"github.com/SHu0117/WASA-Photo/service/database"
@@ -13,17 +12,14 @@ import (
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	var user User
-	pathId, err := strconv.Atoi(ps.ByName("uid"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = rt.db.ExistUID(uint64(pathId))
+	pathUsername := ps.ByName("username")
+	err := rt.db.ExistUsername(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	user.ID = uint64(pathId)
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	user.UserFromDatabase(dbuser)
 
 	var new string
 	err = json.NewDecoder(r.Body).Decode(&new)
@@ -38,7 +34,6 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user.ID = uint64(pathId)
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
 	if auth != 0 {

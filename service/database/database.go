@@ -38,6 +38,7 @@ import (
 )
 
 var ErrDataDoesNotExist = errors.New("data does not exist")
+var ErrUserHasBeenBanned = errors.New("you are banned by the user, can't get any information")
 
 type User struct {
 	ID       uint64
@@ -79,8 +80,12 @@ type AppDatabase interface {
 	ListFollowers(u User) ([]User, error)
 	ListFollowed(u User) ([]User, error)
 	ListBanned(u User) ([]User, error)
-	CheckBanned(user User, banned User) (User, error)
+	CheckBanned(user User, requesterID uint64) (User, error)
 	DeletePhoto(id uint64) error
+	GetUserID(username string) (User, error)
+	GetMyStream(u User) ([]Photo, error)
+	GetUserPhotos(u User) ([]Photo, error)
+	GetPhoto(pid uint64) (Photo, error)
 
 	Ping() error
 }
@@ -96,84 +101,76 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
+	// Enable foreign keys
+	_, err := db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if table exists. If not, the database is empty, and we need to create the structure
 	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
+	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE users(
+
+		userTable := `CREATE TABLE users(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-			username TEXT NOT NULL,
-			UNIQUE(username));`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-	}
+			username TEXT NOT NULL UNIQUE;`
 
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='following';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE following(
-			follower_id INTEGER,
+		followingTable := `CREATE TABLE following(
+			Follower_id INTEGER,
 			followed_id INTEGER,
-			FOREIGN KEY(follower_id) REFERENCES users(id),
+			FOREIGN KEY(Follower_id) REFERENCES users(id),
 			FOREIGN KEY(followed_id) REFERENCES users(id));`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-	}
 
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='banning';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE banning(
-			banner_id INTEGER,
-			banned_id INTEGER,
-			FOREIGN KEY(banner_id) REFERENCES users(id),
-			FOREIGN KEY(banned_id) REFERENCES users(id));`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-	}
+		banningTable := `CREATE TABLE banning(
+			Banner_id INTEGER,
+			Banned_id INTEGER,
+			FOREIGN KEY(Banner_id) REFERENCES users(id),
+			FOREIGN KEY(Banned_id) REFERENCES users(id));`
 
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='photo';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE photo(
+		photoTable := `CREATE TABLE photo(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
 			file BLOB
 			upload_time DATETIME,
 			FOREIGN KEY(user_id) REFERENCES users(id));`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-	}
 
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='like';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE like(
+		likeTable := `CREATE TABLE like(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
 			photo_id INTEGER NOT NULL,
 			FOREIGN KEY(user_id) REFERENCES users(id),
 			FOREIGN KEY(photo_id) REFERENCES photo(id));`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-	}
 
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='comment';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE comment(
+		commentTable := `CREATE TABLE  comment(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			texts TEXT NOT NULL,
 			user_id INTEGER NOT NULL,
 			photo_id INTEGER NOT NULL,
 			FOREIGN KEY(user_id) REFERENCES users(id),
 			FOREIGN KEY(photo_id) REFERENCES photo(id));`
-		_, err = db.Exec(sqlStmt)
+
+		_, err = db.Exec(userTable)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(photoTable)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(likeTable)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(commentTable)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(banningTable)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(followingTable)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}

@@ -24,7 +24,7 @@ func (u *User) UserToDatabase() database.User {
 }
 
 type Following struct {
-	Follower_id uint64 `json:"follower_id"`
+	Follower_id uint64 `json:"Follower_id"`
 	Followed_id uint64 `json:"followed_id"`
 }
 
@@ -41,8 +41,8 @@ func (following *Following) FollowingToDatabase() database.Following {
 }
 
 type Banning struct {
-	Banner_id uint64 `json:"banner_id"`
-	Banned_id uint64 `json:"banned_id"`
+	Banner_id uint64 `json:"Banner_id"`
+	Banned_id uint64 `json:"Banned_id"`
 }
 
 func (b *Banning) BanningFromDatabase(banning database.Banning) {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
 	"github.com/SHu0117/WASA-Photo/service/database"
@@ -13,41 +12,31 @@ import (
 
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	pathId, err := strconv.Atoi(ps.ByName("uid"))
+	var user User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	user.UserFromDatabase(dbuser)
 	var banning Banning
-	banning.Banner_id = uint64(pathId)
+	banning.Banner_id = user.ID
 
-	if banning.Banner_id == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
+	pathBanUsername := ps.ByName("banUsername")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = rt.db.ExistUID(banning.Banner_id)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	pathBannedId, err := strconv.Atoi(ps.ByName("banneduid"))
+	dbuser, err = rt.db.GetUserID(pathBanUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	banning.Banned_id = uint64(pathBannedId)
-	if banning.Banned_id == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	user.UserFromDatabase(dbuser)
 
-	err = rt.db.ExistUID(banning.Banned_id)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
+	banning.Banned_id = user.ID
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
 	if auth != 0 {
@@ -56,25 +45,116 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Check if the user is trying to ban himself/herself
-	if pathId == pathBannedId {
+	if pathUsername == pathBanUsername {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	dbbanning, err := rt.db.BanUser(banning.BanningToDatabase())
 	if err != nil {
-		// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
-		// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
-		ctx.Logger.WithError(err).Error("can't follow")
+		ctx.Logger.WithError(err).Error("can't ban")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// Here we can re-use `fountain` as FromDatabase is overwriting every variabile in the structure.
 	banning.BanningFromDatabase(dbbanning)
 
 	// Send the output to the user.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(banning)
+}
+
+func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	var user User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user.UserFromDatabase(dbuser)
+	var banning Banning
+	banning.Banner_id = user.ID
+
+	pathBanUsername := ps.ByName("banUsername")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dbuser, err = rt.db.GetUserID(pathBanUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user.UserFromDatabase(dbuser)
+
+	banning.Banned_id = user.ID
+
+	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
+	if auth != 0 {
+		w.WriteHeader(auth)
+		return
+	}
+
+	// Check if the user is trying to ban himself/herself
+	if pathUsername == pathBanUsername {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = rt.db.UnbanUser(banning.BanningToDatabase())
+	if errors.Is(err, database.ErrDataDoesNotExist) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
+		ctx.Logger.WithError(err).Error("can't unban")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func (rt *_router) listBanned(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	var list []database.User
+	var user User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user.UserFromDatabase(dbuser)
+	requesterID := getToken(r.Header.Get("Authorization"))
+	err = rt.db.ExistUID(requesterID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	if err != nil {
+		if errors.Is(err, database.ErrUserHasBeenBanned) {
+			ctx.Logger.WithError(err).Error("can't get list")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	user.UserFromDatabase(dbuser)
+	dblist, err := rt.db.ListBanned(user.UserToDatabase())
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	list = dblist
+	// set the header and return output
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(list)
 }

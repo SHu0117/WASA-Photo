@@ -20,13 +20,87 @@ components:
 
   parameters:
 
-    uid:
+    username:
       schema:
-        type: integer
-      name: uid
+        description: username schema.
+        type: string
+        pattern: '^.*?$'
+        example: SiweiHu
+        minLength: 5
+        maxLength: 16
+      name: username
       in: path
       required: true
       description: identifier for users
+    
+    followUsername:
+      schema:
+        description: username schema.
+        type: string
+        pattern: '^.*?$'
+        example: SiweiHu
+        minLength: 5
+        maxLength: 16
+      name: followUsername
+      in: path
+      required: true
+      description: identifier for users to follow
+      
+    
+    banUsername:
+      schema:
+        description: username schema.
+        type: string
+        pattern: '^.*?$'
+        example: SiweiHu
+        minLength: 5
+        maxLength: 16
+      name: banUsername
+      in: path
+      required: true
+      description: identifier for users to ban
+    
+    likeUsername:
+      schema:
+        description: username schema.
+        type: string
+        pattern: '^.*?$'
+        example: SiweiHu
+        minLength: 5
+        maxLength: 16
+      name: likeUsername
+      in: path
+      required: true
+      description: identifier for users of like
+    
+    commentUsername:
+      schema:
+        description: username schema.
+        type: string
+        pattern: '^.*?$'
+        example: SiweiHu
+        minLength: 5
+        maxLength: 16
+      name: commentUsername
+      in: path
+      required: true
+      description: identifier for users to ban
+    
+    
+    pid:
+      schema: 
+        description: Int64 between 0-9999
+        type: integer
+        format: int64
+        example : 999
+        readOnly: true
+      name: pid
+      in: path
+      description: A photo unique identifier
+      required: true
+       
+    
+    
     
     
     
@@ -40,6 +114,8 @@ components:
         uid:
           description: identifier of the user
           type: integer
+          format: int64
+          example: 999
         username:
           type: string
           example: SiweiHu
@@ -62,6 +138,7 @@ components:
         id:
           description: the identifier of the photo
           type: integer
+          format: int64
           readOnly: true
           example: 1
 
@@ -86,6 +163,8 @@ components:
         id:
           description: the identifier of the comment
           type: integer
+          format: int64
+          example: 999
         username:
           description: the username of the user that commented
           type: string
@@ -101,15 +180,62 @@ components:
       properties:
         username:
           type: string
+          pattern: '^.*?$'
+          example: SiweiHu
+          minLength: 5
+          maxLength: 16
         n_photos:
           description: number of photos published by the user
           type: integer
+          example: 1
         n_followers:
           description: number of followers of the user
           type: integer
+          example: 1
         n_following:
           description: number of other users followed by the user
           type: integer
+          example: 1
+    
+    Follow:
+      title: Follow 
+      description: Follow schema.
+      type: object
+      properties:
+        followedUser:
+          description: Unique user username.
+          type: string
+          pattern: '^.*?$'
+          example: Siwei
+          minLength: 3
+          maxLength: 16
+        userId:
+          description: Unique user username.
+          type: string
+          pattern: '^.*?$'
+          example: Leo
+          minLength: 3
+          maxLength: 16
+    
+    Ban:
+      title: Ban
+      description: Ban schema.
+      type: object
+      properties:
+        bannedUser:
+          description: Unique user username.
+          type: string
+          pattern: '^.*?$'
+          example: Siwei
+          minLength: 3
+          maxLength: 16
+        userId:
+          description: Unique user username.
+          type: string
+          pattern: '^.*?$'
+          example: Alessio
+          minLength: 3
+          maxLength: 16
             
           
           
@@ -158,34 +284,12 @@ paths:
                     type: string
                     example: "abcdef012345"
                     
-  /users/:
-    post:
-      security:
-        - bearerAuth: []
-      tags:
-        - user
-      operationId: newUser
-      summary: create new user
-      requestBody:
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/User"}
-      responses:
-        "200":
-          description: Unew user created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/User"}
-        "400": 
-          description: The request was not compliant with the documentation (eg. missing fields, etc).
-        "500": 
-          description: The server encountered an internal error. Further info in server logs.
       
                 
   
-  /users/{uid}/homepage/:
+  /users/{username}/homepage:
     parameters:
-      - {$ref:  "#/components/parameters/uid"}
+      - $ref:  "#/components/parameters/username"
     get:
       security:
         - bearerAuth: []         # use the same name as above
@@ -204,13 +308,17 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Photo"}
+                minItems: 0
+                maxItems: 99999
               
   
-  /users/{uid}/:
+  /users/{username}:
     parameters:
-       - {$ref: "#/components/parameters/uid"}
+       - $ref: "#/components/parameters/username"
     
     get:
+      security:
+        - bearerAuth : []
       tags:
         - user
       operationId: getUserProfile
@@ -230,7 +338,8 @@ paths:
           description: User not found 
         "500": 
           description: The server encountered an internal error. Further info in server logs.
-      
+  
+
     put:
       security:
         - bearerAuth: []
@@ -268,9 +377,9 @@ paths:
   
   
   
-  /users/{uid}/photos/:
+  /users/{username}/photos/:
     parameters: 
-      - {$ref: "#/components/parameters/uid"}
+      - $ref: "#/components/parameters/username"
       
     post:
       security:
@@ -283,11 +392,18 @@ paths:
         adding a new photo with a new id created
         actually a user can upload the same picture twice or multiple time but each photo will have a different id
       requestBody:
+        required: true
         content:
-          image/png:
+          image/*:
             schema:
-              type: string
-              format: binary
+              description: Image schema
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  minLength: 0
+                  maxLength: 99999
       responses:
         '201':
           description: new photo uloaded successfully
@@ -299,20 +415,14 @@ paths:
     
           
   
-  /users/{uid}/photos/{pid}: 
+  /users/{username}/photos/{pid}: 
     parameters: 
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: pid
-        in: path
-        schema : 
-          type: integer
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/pid"
     
     get:
+      security:
+        - bearerAuth : []
       tags:
         - photo
       summary: Get photo details
@@ -344,23 +454,11 @@ paths:
           description: The server encountered an internal error. Further info in server logs.
 
 
-  /users/{uid}/photos/{pid}/likes/{likeuid}:
+  /users/{username}/photos/{pid}/likes/{likeUsername}:
     parameters: 
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: pid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: likeuid
-        in: path
-        schema : 
-          type: integer
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/pid"
+      - $ref: "#/components/parameters/likeUsername"
     
     put:
       security:
@@ -389,19 +487,12 @@ paths:
       responses:
         '204':
           description:  operation successfull
+          
   
-  /users/{uid}/following/{followeduid}: 
+  /users/{username}/following/{followUsername}: 
     parameters:
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: followeduid
-        in: path
-        schema : 
-          type: integer
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/followUsername"
     put:
       security:
           - bearerAuth: []
@@ -415,7 +506,7 @@ paths:
           description:  operation successfull
           content:
             application/json:
-              schema: { $ref : "#/components/schemas/uid"}
+              schema: { $ref : "#/components/schemas/Follow"}
               
     delete:
       security:
@@ -429,57 +520,12 @@ paths:
         '204':
           description:  operation successfull
           
-  /users/{uid}/followers/{followeruid}: 
-    parameters:
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: followeruid
-        in: path
-        schema : 
-          type: integer
-        required: true
-    put:
-      security:
-          - bearerAuth: []
-      tags:
-        - user
-      operationId: followerUser
-      summary: follow a user
-      description: id of the user following user with uid will be added to the collection following
-      responses:
-        '201':
-          description:  operation successfull
-          content:
-            application/json:
-              schema: { $ref : "#/components/schemas/uid"}
-              
-    delete:
-      security:
-          - bearerAuth: []
-      tags:
-        - user
-      operationId: deleteFollowerUser
-      summary: remove a user from following
-      description: id of the user will be deleted from the collection following
-      responses:
-        '204':
-          description:  operation successfull
+
           
-  /users/{uid}/photos/{pid}/comments/:
+  /users/{username}/photos/{pid}/comments/:
     parameters: 
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: pid
-        in: path
-        schema : 
-          type: string
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/pid"
       
     post:
       security:
@@ -501,24 +547,13 @@ paths:
             application/json:
               schema: { $ref : "#/components/schemas/Comment"}
               
-  /users/{uid}/photos/{pid}/comments/{cid}:
+              
+  /users/{username}/photos/{pid}/comments/{commentUsername}:
   
     parameters: 
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: pid
-        in: path
-        schema : 
-          type: string
-        required: true
-      - name: cid
-        in: path
-        schema : 
-          type: integer
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/pid"
+      - $ref: "#/components/parameters/commentUsername"
       
     delete:
       security:
@@ -534,18 +569,10 @@ paths:
           
 
               
-  /users/{uid}/banned/{banneduid}:
+  /users/{username}/banned/{banUsername}:
     parameters: 
-      - name: uid
-        in: path
-        schema : 
-          type: integer
-        required: true
-      - name: banneduid
-        in: path
-        schema : 
-          type: integer
-        required: true
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/banUsername"
     
     put:
       security:
@@ -560,7 +587,7 @@ paths:
           description:  operation successfull
           content:
             application/json:
-              schema: { $ref : "#/components/schemas/uid"}
+              schema: { $ref : "#/components/schemas/Ban"}
               
     delete:
       security:
@@ -573,6 +600,8 @@ paths:
       responses:
         '204':
           description:  operation successfull
+
+   
 
               
               

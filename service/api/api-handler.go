@@ -10,15 +10,20 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/context", rt.wrap(rt.getContextReply))
 
 	rt.router.POST("/sessions", rt.wrap(rt.doLogin))
+	rt.router.GET("/users/:username/homepage", rt.wrap(rt.getMyStream))
 
-	rt.router.POST("/users/:uid/photo", rt.wrap(rt.uploadPhoto))
-	rt.router.DELETE("/users/:uid/photo/:pid", rt.wrap(rt.deletePhoto))
+	rt.router.POST("/users/:username/photo/", rt.wrap(rt.uploadPhoto))
+	rt.router.GET("/users/:username/photo/", rt.wrap(rt.getUserPhoto))
+	rt.router.DELETE("/users/:username/photo/:pid", rt.wrap(rt.deletePhoto))
+	rt.router.GET("/users/:username/photo/:pid", rt.wrap(rt.getPhoto))
 
-	rt.router.PUT("/users/:uid/following/:followeduid", rt.wrap(rt.followUser))
-	rt.router.DELETE("/users/:uid/following/:followeduid", rt.wrap(rt.unfollowUser))
+	rt.router.PUT("/users/:username/following/:followUsername", rt.wrap(rt.followUser))
+	rt.router.DELETE("/users/:username/following/:followUsername", rt.wrap(rt.unfollowUser))
+	rt.router.GET("/users/:username/following/", rt.wrap(rt.listFollowed))
 
-	rt.router.PUT("/users/:uid/banning/:banneduid", rt.wrap(rt.banUser))
-	rt.router.DELETE("/users/:uid/banning/:banneduid", rt.wrap(rt.unbanUser))
+	rt.router.PUT("/users/:username/banned/:banUsername", rt.wrap(rt.banUser))
+	rt.router.DELETE("/users/:username/banned/:banUsername", rt.wrap(rt.unbanUser))
+	rt.router.GET("/users/:username/banned/", rt.wrap(rt.listBanned))
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
