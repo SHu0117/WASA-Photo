@@ -2,7 +2,7 @@ package database
 
 func (db *appdbimpl) ListFollowers(user User) ([]User, error) {
 
-	rows, err := db.c.Query("SELECT u.id, u.username FROM users u, following f WHERE f.followed_id = ? and f.Follower_id = u.id", user.ID)
+	rows, err := db.c.Query("SELECT u.id, u.username FROM user u, following f WHERE f.followed_id = ? and f.Follower_id = u.id", user.ID)
 	if err != nil {
 		return nil, err
 	}

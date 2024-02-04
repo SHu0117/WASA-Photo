@@ -3,7 +3,7 @@ package database
 // upload photo and returns photoId
 func (db *appdbimpl) UploadPhoto(p Photo) (Photo, error) {
 
-	res, err := db.c.Exec("INSERT INTO photo (user_id, file, upload_time) VALUES (?, ?, ?)",
+	res, err := db.c.Exec("INSERT INTO photos(user_id, file, upload_time) VALUES (?, ?, ?)",
 		p.User_id, p.File, p.Upload_time)
 
 	if err != nil {

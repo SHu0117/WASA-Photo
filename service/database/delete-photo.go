@@ -2,12 +2,12 @@ package database
 
 func (db *appdbimpl) DeletePhoto(id uint64) error {
 
-	_, err1 := db.c.Exec(`DELETE FROM likes WHERE photoId=?`, id)
+	_, err1 := db.c.Exec(`DELETE FROM like WHERE photo_id=?`, id)
 	if err1 != nil {
 		return err1
 	}
 
-	_, err2 := db.c.Exec(`DELETE FROM comments WHERE photoId=?`, id)
+	_, err2 := db.c.Exec(`DELETE FROM comment WHERE photo_id=?`, id)
 	if err2 != nil {
 		return err2
 	}

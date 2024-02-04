@@ -1,8 +1,6 @@
 package api
 
 import (
-	"time"
-
 	"github.com/SHu0117/WASA-Photo/service/database"
 )
 
@@ -58,12 +56,12 @@ func (banning *Banning) BanningToDatabase() database.Banning {
 }
 
 type Photo struct {
-	ID          uint64    `json:"id"`
-	User_id     uint64    `json:"userId"`
-	N_likes     int64     `json:"likesN"`
-	N_comments  int64     `json:"commentsN"`
-	Upload_time time.Time `json:"uploadtime"`
-	File        []byte    `json:"file"`
+	ID          uint64 `json:"id"`
+	User_id     uint64 `json:"userId"`
+	N_likes     int64  `json:"likesN"`
+	N_comments  int64  `json:"commentsN"`
+	Upload_time string `json:"uploadtime"`
+	File        []byte `json:"file"`
 }
 
 func (p *Photo) PhotoFromDatabase(photo database.Photo) {
@@ -81,5 +79,55 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 		N_likes:     p.N_likes,
 		N_comments:  p.N_comments,
 		Upload_time: p.Upload_time,
+	}
+}
+
+type Like struct {
+	ID         uint64 `json:"id"`
+	User_id    uint64 `json:"userId"`
+	Photo_id   uint64 `json:"photoId"`
+	Photo_user uint64 `json:"photoOwner"`
+}
+
+func (l *Like) LikeFromDatabase(like database.Like) {
+	l.ID = like.ID
+	l.User_id = like.User_id
+	l.Photo_id = like.Photo_id
+	l.Photo_user = like.Photo_user
+
+}
+
+func (l *Like) LikeToDatabase() database.Like {
+	return database.Like{
+		ID:         l.ID,
+		User_id:    l.User_id,
+		Photo_id:   l.Photo_id,
+		Photo_user: l.Photo_user,
+	}
+}
+
+type Comment struct {
+	ID         uint64 `json:"id"`
+	User_id    uint64 `json:"userId"`
+	Photo_id   uint64 `json:"photoId"`
+	Photo_user uint64 `json:"photoOwner"`
+	Text       string `json:"text"`
+}
+
+func (c *Comment) CommentFromDatabase(comment database.Comment) {
+	c.ID = comment.ID
+	c.User_id = comment.User_id
+	c.Photo_id = comment.Photo_id
+	c.Photo_user = comment.Photo_user
+	c.Text = comment.Text
+}
+
+func (c *Comment) CommentToDatabase() database.Comment {
+	return database.Comment{
+		ID:         c.ID,
+		User_id:    c.User_id,
+		Photo_id:   c.Photo_id,
+		Photo_user: c.Photo_user,
+		Text:       c.Text,
 	}
 }

@@ -34,7 +34,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 )
 
 var ErrDataDoesNotExist = errors.New("data does not exist")
@@ -51,7 +50,7 @@ type Photo struct {
 	File        []byte
 	N_likes     int64
 	N_comments  int64
-	Upload_time time.Time
+	Upload_time string
 }
 
 type Following struct {
@@ -62,6 +61,21 @@ type Following struct {
 type Banning struct {
 	Banner_id uint64
 	Banned_id uint64
+}
+
+type Like struct {
+	ID         uint64 `json:"id"`
+	User_id    uint64 `json:"userId"`
+	Photo_id   uint64 `json:"photoId"`
+	Photo_user uint64 `json:"photoOwner"`
+}
+
+type Comment struct {
+	ID         uint64
+	User_id    uint64
+	Photo_id   uint64
+	Photo_user uint64
+	Text       string
 }
 
 // AppDatabase is the high level interface for the DB
@@ -86,6 +100,12 @@ type AppDatabase interface {
 	GetMyStream(u User) ([]Photo, error)
 	GetUserPhotos(u User) ([]Photo, error)
 	GetPhoto(pid uint64) (Photo, error)
+	LikePhoto(l Like) (Like, error)
+	UnlikePhoto(pid uint64, uid uint64) error
+	ListLikes(pid uint64) ([]User, error)
+	CommentPhoto(c Comment) (Comment, error)
+	UncommentPhoto(pid uint64, uid uint64) error
+	ListComment(pid uint64) ([]Comment, error)
 
 	Ping() error
 }
@@ -109,46 +129,46 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 	// Check if table exists. If not, the database is empty, and we need to create the structure
 	var tableName string
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
+	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='user';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 
-		userTable := `CREATE TABLE users(
+		userTable := `CREATE TABLE IF NOT EXISTS user(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-			username TEXT NOT NULL UNIQUE;`
+			username TEXT NOT NULL UNIQUE);`
 
-		followingTable := `CREATE TABLE following(
+		followingTable := `CREATE TABLE IF NOT EXISTS following(
 			Follower_id INTEGER,
 			followed_id INTEGER,
-			FOREIGN KEY(Follower_id) REFERENCES users(id),
-			FOREIGN KEY(followed_id) REFERENCES users(id));`
+			FOREIGN KEY(Follower_id) REFERENCES user(id),
+			FOREIGN KEY(followed_id) REFERENCES user(id));`
 
-		banningTable := `CREATE TABLE banning(
+		banningTable := `CREATE TABLE IF NOT EXISTS banning(
 			Banner_id INTEGER,
 			Banned_id INTEGER,
-			FOREIGN KEY(Banner_id) REFERENCES users(id),
-			FOREIGN KEY(Banned_id) REFERENCES users(id));`
+			FOREIGN KEY(Banner_id) REFERENCES user(id),
+			FOREIGN KEY(Banned_id) REFERENCES user(id));`
 
-		photoTable := `CREATE TABLE photo(
+		photoTable := `CREATE TABLE IF NOT EXISTS photos(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
-			file BLOB
-			upload_time DATETIME,
-			FOREIGN KEY(user_id) REFERENCES users(id));`
+			file BLOB,
+			upload_time TEXT,
+			FOREIGN KEY(user_id) REFERENCES user(id));`
 
-		likeTable := `CREATE TABLE like(
+		likeTable := `CREATE TABLE IF NOT EXISTS like(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
 			photo_id INTEGER NOT NULL,
-			FOREIGN KEY(user_id) REFERENCES users(id),
-			FOREIGN KEY(photo_id) REFERENCES photo(id));`
+			FOREIGN KEY(user_id) REFERENCES user(id),
+			FOREIGN KEY(photo_id) REFERENCES photos(id));`
 
-		commentTable := `CREATE TABLE  comment(
+		commentTable := `CREATE TABLE IF NOT EXISTS comment(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			texts TEXT NOT NULL,
 			user_id INTEGER NOT NULL,
 			photo_id INTEGER NOT NULL,
-			FOREIGN KEY(user_id) REFERENCES users(id),
-			FOREIGN KEY(photo_id) REFERENCES photo(id));`
+			FOREIGN KEY(user_id) REFERENCES user(id),
+			FOREIGN KEY(photo_id) REFERENCES photos(id));`
 
 		_, err = db.Exec(userTable)
 		if err != nil {

@@ -1,7 +1,7 @@
 package database
 
 func (db *appdbimpl) NewUser(u User) (User, error) {
-	res, err := db.c.Exec(`INSERT INTO users (username) VALUES (?)`,
+	res, err := db.c.Exec(`INSERT INTO user (username) VALUES (?)`,
 		u.Username)
 	if err != nil {
 		return u, err

@@ -1,10 +1,11 @@
 package api
 
 import (
-	"bytes"
+	// "bytes"
 	"encoding/json"
 	"errors"
-	"image/png"
+
+	// "image/png"
 	"io"
 	"net/http"
 	"strconv"
@@ -35,7 +36,8 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	var photo Photo
 	photo.User_id = user.ID
-	photo.Upload_time = time.Now().UTC()
+	currentTime := time.Now().UTC()
+	photo.Upload_time = currentTime.Format("2006-01-02 15:04:05")
 	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(photo.User_id))
 	if auth != 0 {
 		w.WriteHeader(auth)
@@ -49,20 +51,22 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	/**
 	r.Body = io.NopCloser(bytes.NewBuffer(data))
 
 	// Check if the body content is either a png image
 	_, errPng := png.Decode(r.Body)
 	if errPng != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("body contains file that is not png")
-		_ = json.NewEncoder(w).Encode("images must be png")
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "images must be png"})
 		return
 	}
 
 	// Body has been read in the previous function so it's necessary to reassign a io.ReadCloser to it
 	r.Body = io.NopCloser(bytes.NewBuffer(data))
-
+	**/
 	photo.File = data
 
 	// Generate a unique id for the photo
@@ -72,7 +76,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "image/*")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	photo.PhotoFromDatabase(dbPhoto)
 	// controllaerrore
@@ -100,6 +104,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
 	if auth != 0 {
 		w.WriteHeader(auth)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -162,7 +167,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	var photo Photo
 	dbphoto, err := rt.db.GetPhoto(uint64(photoId))
 	if err != nil {
-		ctx.Logger.WithError(err).Error("can't delete the corrisponding photo ")
+		ctx.Logger.WithError(err).Error("can't get the corrisponding photo ")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -214,7 +219,7 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 	list = dblist
-	w.Header().Set("Content-Type", "image/*")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(list)
 }
@@ -245,7 +250,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	var list []database.Photo
 	dblist, err := rt.db.GetMyStream(user.UserToDatabase())
 	if err != nil {
-		ctx.Logger.WithError(err).Error("can't get the list ")
+		ctx.Logger.WithError(err).Error("can't get the stream ")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
