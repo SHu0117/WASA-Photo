@@ -131,3 +131,14 @@ func (c *Comment) CommentToDatabase() database.Comment {
 		Text:       c.Text,
 	}
 }
+
+type Profile struct {
+	Requester_id uint64 `json:"requester_id"`
+	User_id      uint64 `json:"user_id"`
+	Username     string `json:"username"`
+	N_followers  int    `json:"followers"`
+	N_followed   int    `json:"followed"`
+	N_photo      int    `json:"photos"`
+	Is_followed  bool   `json:"isFollowed"`
+	Is_banned    bool   `json:"isBanned"`
+}

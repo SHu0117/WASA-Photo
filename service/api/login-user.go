@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/SHu0117/WASA-Photo/service/api/reqcontext"
@@ -20,7 +21,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	err = rt.db.ExistUsername(user.Username)
-	if err == database.ErrDataDoesNotExist {
+	if errors.Is(err, database.ErrDataDoesNotExist) {
 		dbuser, err := rt.db.NewUser(user.UserToDatabase())
 		if err != nil {
 			// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user

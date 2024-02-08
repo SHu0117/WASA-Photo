@@ -56,6 +56,11 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	err = rt.db.ExistUsername(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	dbuser, err = rt.db.GetUserID(pathOwner)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
@@ -63,13 +68,12 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 	user.UserFromDatabase(dbuser)
-
 	like.Photo_user = user.ID
 
 	// Generate a unique id for the photo
 	dblike, err := rt.db.LikePhoto(like.LikeToDatabase())
 	if err != nil {
-		ctx.Logger.WithError(err).Error("error executing db function call")
+		ctx.Logger.WithError(err).Error("there's an error executing db function call")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

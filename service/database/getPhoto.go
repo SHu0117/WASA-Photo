@@ -1,25 +1,28 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 // upload photo and returns photoId
 func (db *appdbimpl) GetPhoto(pid uint64) (Photo, error) {
 	var p Photo
 	err := db.c.QueryRow("SELECT id, user_id, file, upload_time FROM photos WHERE id = ? ", pid).Scan(&p.ID, &p.User_id, &p.File, &p.Upload_time)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return p, ErrDataDoesNotExist
 		}
 	}
 	err = db.c.QueryRow("SELECT count(*) FROM photos p, like l WHERE id = ? and l.photo_id = ? ", pid, pid).Scan(&p.N_likes)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return p, ErrDataDoesNotExist
 		}
 	}
 	err = db.c.QueryRow("SELECT count(*) FROM photos p, commet c WHERE id = ? and c.photo_id = ? ", pid, pid).Scan(&p.N_comments)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return p, ErrDataDoesNotExist
 		}
 	}
@@ -41,13 +44,13 @@ func (db *appdbimpl) GetUserPhotos(u User) ([]Photo, error) {
 		}
 		err = db.c.QueryRow("SELECT count(*) FROM photos p, like l WHERE id = ? and l.photo_id = ? ", p.ID, p.ID).Scan(&p.N_likes)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
 			}
 		}
 		err = db.c.QueryRow("SELECT count(*) FROM photos p, comment c WHERE id = ? and c.photo_id = ? ", p.ID, p.ID).Scan(&p.N_comments)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
 			}
 		}
@@ -57,6 +60,17 @@ func (db *appdbimpl) GetUserPhotos(u User) ([]Photo, error) {
 		return nil, err
 	}
 	return list, nil
+}
+
+func (db *appdbimpl) CountPhotos(u User) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT count(*) FROM photos WHERE p.user_id = ?", u.ID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return count, ErrDataDoesNotExist
+		}
+	}
+	return count, nil
 }
 
 func (db *appdbimpl) GetMyStream(u User) ([]Photo, error) {
@@ -76,13 +90,13 @@ func (db *appdbimpl) GetMyStream(u User) ([]Photo, error) {
 		}
 		err = db.c.QueryRow("SELECT count(*) FROM photos p, like l WHERE id = ? and l.photo_id = ? ", p.ID, p.ID).Scan(&p.N_likes)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
 			}
 		}
 		err = db.c.QueryRow("SELECT count(*) FROM photos p, comment c WHERE id = ? and c.photo_id = ? ", p.ID, p.ID).Scan(&p.N_comments)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
 			}
 		}

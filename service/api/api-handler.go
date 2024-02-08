@@ -17,6 +17,14 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/users/:username/photo/:pid", rt.wrap(rt.deletePhoto))
 	rt.router.GET("/users/:username/photo/:pid", rt.wrap(rt.getPhoto))
 
+	rt.router.PUT("/users/:username/photo/:pid/likes/:likeUsername", rt.wrap(rt.likePhoto))
+	rt.router.DELETE("/users/:username/photo/:pid/likes/:likeUsername", rt.wrap(rt.unlikePhoto))
+	rt.router.GET("/users/:username/photo/:pid/likes", rt.wrap(rt.getPhotoLikes))
+
+	rt.router.PUT("/users/:username/photo/:pid/comments/:commentUsername", rt.wrap(rt.commentPhoto))
+	rt.router.DELETE("/users/:username/photo/:pid/comments/:commentUsername", rt.wrap(rt.uncommentPhoto))
+	rt.router.GET("/users/:username/photo/:pid/comments", rt.wrap(rt.getPhotoComments))
+
 	rt.router.PUT("/users/:username/following/:followUsername", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:username/following/:followUsername", rt.wrap(rt.unfollowUser))
 	rt.router.GET("/users/:username/following/", rt.wrap(rt.listFollowed))

@@ -3,7 +3,7 @@ package database
 // upload photo and returns photoId
 func (db *appdbimpl) LikePhoto(l Like) (Like, error) {
 
-	res, err := db.c.Exec("INSERT INTO like(user_id, photo_id) VALUES (?, ?)",
+	res, err := db.c.Exec("INSERT INTO like (user_id, photo_id) VALUES (?, ?)",
 		l.User_id, l.Photo_id)
 
 	if err != nil {

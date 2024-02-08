@@ -1,5 +1,10 @@
 package database
 
+import (
+	"database/sql"
+	"errors"
+)
+
 func (db *appdbimpl) ListFollowed(user User) ([]User, error) {
 
 	rows, err := db.c.Query("SELECT u.id, u.username FROM user u, following f WHERE f.Follower_id = ? and f.followed_id = u.id", user.ID)
@@ -25,4 +30,26 @@ func (db *appdbimpl) ListFollowed(user User) ([]User, error) {
 	}
 
 	return followedUsers, nil
+}
+
+func (db *appdbimpl) CountFollowed(user User) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT count(*) FROM following f WHERE f.Follower_id = ?", user.ID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return count, ErrDataDoesNotExist
+		}
+	}
+	return count, nil
+}
+
+func (db *appdbimpl) CountFollower(user User) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT count(*) FROM following f WHERE f.followed_id = ?", user.ID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return count, ErrDataDoesNotExist
+		}
+	}
+	return count, nil
 }
