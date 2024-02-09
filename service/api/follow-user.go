@@ -154,15 +154,14 @@ func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var user User
-	user.UserFromDatabase(dbuser)
+
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(dbuser, requesterID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -173,7 +172,7 @@ func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	dblist, err := rt.db.ListFollowed(user.UserToDatabase())
+	dblist, err := rt.db.ListFollowed(dbuser)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")
 		w.WriteHeader(http.StatusInternalServerError)
