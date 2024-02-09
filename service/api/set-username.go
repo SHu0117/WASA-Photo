@@ -11,7 +11,7 @@ import (
 )
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	var user User
+
 	pathUsername := ps.ByName("username")
 	err := rt.db.ExistUsername(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
@@ -19,6 +19,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	dbuser, err := rt.db.GetUserID(pathUsername)
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	var new string

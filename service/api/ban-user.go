@@ -20,6 +20,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	user.UserFromDatabase(dbuser)
+
 	var banning Banning
 	banning.Banner_id = user.ID
 
@@ -35,8 +36,19 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	user.UserFromDatabase(dbuser)
-
 	banning.Banned_id = user.ID
+
+	ifBanned, err := rt.db.CheckIfBanned(banning.Banned_id, banning.Banner_id)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't execute")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if ifBanned {
+		ctx.Logger.WithError(err).Error("you have already banned the user")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
 	if auth != 0 {
@@ -67,13 +79,13 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 
 func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	var banning Banning
 	banning.Banner_id = user.ID
@@ -90,8 +102,19 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	user.UserFromDatabase(dbuser)
-
 	banning.Banned_id = user.ID
+
+	ifBanned, err := rt.db.CheckIfBanned(banning.Banned_id, banning.Banner_id)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't execute")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !ifBanned {
+		ctx.Logger.WithError(err).Error("you have not banned the user before")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), banning.Banner_id)
 	if auth != 0 {
@@ -119,13 +142,13 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 
 func (rt *_router) listBanned(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	var list []database.User
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
@@ -133,19 +156,17 @@ func (rt *_router) listBanned(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
 	if err != nil {
-		if errors.Is(err, database.ErrUserHasBeenBanned) {
-			ctx.Logger.WithError(err).Error("can't get list")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
-	user.UserFromDatabase(dbuser)
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	dblist, err := rt.db.ListBanned(user.UserToDatabase())
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")

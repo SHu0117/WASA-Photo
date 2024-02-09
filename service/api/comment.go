@@ -15,19 +15,12 @@ import (
 // Function that manages the upload of a photo
 func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-	pathUsername := ps.ByName("commentUsername")
-	err := rt.db.ExistUsername(pathUsername)
+	requesterID := getToken(r.Header.Get("Authorization"))
+	err := rt.db.ExistUID(requesterID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	dbuser, err := rt.db.GetUserID(pathUsername)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	user.UserFromDatabase(dbuser)
 
 	var comment Comment
 	err = json.NewDecoder(r.Body).Decode(&comment)
@@ -35,13 +28,13 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
+	auth := checkAuthorization(r.Header.Get("Authorization"), requesterID)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	comment.User_id = user.ID
+	comment.User_id = requesterID
 	photoId, err1 := strconv.Atoi(ps.ByName("pid"))
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -62,7 +55,8 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	dbuser, err = rt.db.GetUserID(pathOwner)
+	var user User
+	dbuser, err := rt.db.GetUserID(pathOwner)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -88,7 +82,6 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("commentUsername")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -100,6 +93,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
@@ -133,13 +127,13 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	var list []database.Comment
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
@@ -160,16 +154,16 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
 	if err != nil {
-		if errors.Is(err, database.ErrUserHasBeenBanned) {
-			ctx.Logger.WithError(err).Error("can't get list")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 	dblist, err := rt.db.ListComment(uint64(photoId))
 	if err != nil {

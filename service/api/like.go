@@ -15,7 +15,6 @@ import (
 // Function that manages the upload of a photo
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("likeUsername")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -27,6 +26,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	var like Like
@@ -87,13 +87,13 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("likeUsername")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
@@ -132,13 +132,13 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	var list []database.User
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
@@ -159,16 +159,16 @@ func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
 	if err != nil {
-		if errors.Is(err, database.ErrUserHasBeenBanned) {
-			ctx.Logger.WithError(err).Error("can't get list")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 	dblist, err := rt.db.ListLikes(uint64(photoId))
 	if err != nil {

@@ -42,13 +42,13 @@ func (db *appdbimpl) GetUserPhotos(u User) ([]Photo, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = db.c.QueryRow("SELECT count(*) FROM photos p, like l WHERE id = ? and l.photo_id = ? ", p.ID, p.ID).Scan(&p.N_likes)
+		err = db.c.QueryRow("SELECT count(*) FROM like WHERE photo_id = ? ", p.ID).Scan(&p.N_likes)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
 			}
 		}
-		err = db.c.QueryRow("SELECT count(*) FROM photos p, comment c WHERE id = ? and c.photo_id = ? ", p.ID, p.ID).Scan(&p.N_comments)
+		err = db.c.QueryRow("SELECT count(*) FROM comment WHERE photo_id = ? ", p.ID).Scan(&p.N_comments)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrDataDoesNotExist
@@ -64,7 +64,7 @@ func (db *appdbimpl) GetUserPhotos(u User) ([]Photo, error) {
 
 func (db *appdbimpl) CountPhotos(u User) (int, error) {
 	var count int
-	err := db.c.QueryRow("SELECT count(*) FROM photos WHERE p.user_id = ?", u.ID).Scan(&count)
+	err := db.c.QueryRow("SELECT count(*) FROM photos WHERE user_id = ?", u.ID).Scan(&count)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return count, ErrDataDoesNotExist

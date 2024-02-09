@@ -93,7 +93,7 @@ type AppDatabase interface {
 	ListFollowers(u User) ([]User, error)
 	ListFollowed(u User) ([]User, error)
 	ListBanned(u User) ([]User, error)
-	CheckBanned(user User, requesterID uint64) (User, error)
+	CheckBeingBanned(user User, requesterID uint64) (bool, error)
 	DeletePhoto(id uint64) error
 	GetUserID(username string) (User, error)
 	GetMyStream(u User) ([]Photo, error)
@@ -105,7 +105,11 @@ type AppDatabase interface {
 	CommentPhoto(c Comment) (Comment, error)
 	UncommentPhoto(pid uint64, uid uint64) error
 	ListComment(pid uint64) ([]Comment, error)
-
+	CountFollowed(user User) (int, error)
+	CountPhotos(u User) (int, error)
+	CountFollower(user User) (int, error)
+	CheckIfFollowed(targetID uint64, requesterID uint64) (bool, error)
+	CheckIfBanned(targetID uint64, requesterID uint64) (bool, error)
 	Ping() error
 }
 

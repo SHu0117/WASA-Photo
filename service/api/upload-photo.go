@@ -86,8 +86,6 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-	// w.Header().Set("Content-Type", "application/json")
 	pathUsername := ps.ByName("username")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -99,6 +97,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
@@ -131,8 +130,6 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-	// w.Header().Set("Content-Type", "application/json")
 	pathUsername := ps.ByName("username")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -144,6 +141,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
@@ -179,8 +177,6 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-	// w.Header().Set("Content-Type", "application/json")
 	pathUsername := ps.ByName("username")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -192,6 +188,7 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
@@ -199,16 +196,16 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
 	if err != nil {
-		if errors.Is(err, database.ErrUserHasBeenBanned) {
-			ctx.Logger.WithError(err).Error("can't get the list")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	var list []database.Photo
@@ -226,8 +223,6 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-	// w.Header().Set("Content-Type", "application/json")
 	pathUsername := ps.ByName("username")
 	err := rt.db.ExistUsername(pathUsername)
 	if err != nil {
@@ -239,6 +234,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)

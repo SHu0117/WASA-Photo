@@ -5,13 +5,32 @@ import (
 	"errors"
 )
 
-func (db *appdbimpl) CheckBanned(user User, requesterID uint64) (User, error) {
-	var banned User
-	err := db.c.QueryRow(`SELECT u.id, u.username FROM user u, banning b WHERE b.Banner_id = ? and b.Banned_id = ? AND u.id = ?`, user.ID, requesterID, requesterID).Scan(&banned.ID, &banned.Username)
-	if err == nil {
-		return banned, ErrUserHasBeenBanned
-	} else if errors.Is(err, sql.ErrNoRows) {
-		return banned, nil
+func (db *appdbimpl) CheckBeingBanned(user User, requesterID uint64) (bool, error) {
+	var res bool
+	if err := db.c.QueryRow(`SELECT EXISTS(SELECT * FROM banning WHERE Banner_id = ? AND  Banned_id = ?)`, user.ID, requesterID).Scan(&res); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, err
+		}
 	}
-	return banned, err
+	return res, nil
+}
+
+func (db *appdbimpl) CheckIfFollowed(targetID uint64, requesterID uint64) (bool, error) {
+	var res bool
+	if err := db.c.QueryRow(`SELECT EXISTS(SELECT * FROM following WHERE Follower_id = ? AND  followed_id = ?)`, requesterID, targetID).Scan(&res); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, err
+		}
+	}
+	return res, nil
+}
+
+func (db *appdbimpl) CheckIfBanned(targetID uint64, requesterID uint64) (bool, error) {
+	var res bool
+	if err := db.c.QueryRow(`SELECT EXISTS(SELECT * FROM banning WHERE Banner_id = ? AND  Banned_id = ?)`, requesterID, targetID).Scan(&res); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, err
+		}
+	}
+	return res, nil
 }

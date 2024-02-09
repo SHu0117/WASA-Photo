@@ -12,14 +12,13 @@ import (
 
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
-
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 
 	var following Following
@@ -38,6 +37,18 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	user.UserFromDatabase(dbuser)
 	following.Followed_id = user.ID
+
+	ifFollowed, err := rt.db.CheckIfFollowed(following.Followed_id, following.Follower_id)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't execute")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if ifFollowed {
+		ctx.Logger.WithError(err).Error("you have already followed the user")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
@@ -69,13 +80,13 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	var following Following
 	following.Follower_id = user.ID
@@ -98,6 +109,18 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 	user.UserFromDatabase(dbuser)
 	following.Followed_id = user.ID
+
+	ifFollowed, err := rt.db.CheckIfFollowed(following.Followed_id, following.Follower_id)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't execute")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !ifFollowed {
+		ctx.Logger.WithError(err).Error("you have not followed the user before")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
@@ -125,13 +148,13 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	var list []database.User
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var user User
 	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
@@ -139,16 +162,16 @@ func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	dbuser, err = rt.db.CheckBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
 	if err != nil {
-		if errors.Is(err, database.ErrUserHasBeenBanned) {
-			ctx.Logger.WithError(err).Error("can't get list")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 	dblist, err := rt.db.ListFollowed(user.UserToDatabase())
 	if err != nil {

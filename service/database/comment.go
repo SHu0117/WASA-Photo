@@ -3,7 +3,7 @@ package database
 // upload photo and returns photoId
 func (db *appdbimpl) CommentPhoto(c Comment) (Comment, error) {
 
-	res, err := db.c.Exec("INSERT INTO comment(text, user_id, photo_id) VALUES (?, ?, ?)",
+	res, err := db.c.Exec("INSERT INTO comment(texts, user_id, photo_id) VALUES (?, ?, ?)",
 		c.Text, c.User_id, c.Photo_id)
 
 	if err != nil {
@@ -38,7 +38,7 @@ func (db *appdbimpl) UncommentPhoto(pid uint64, uid uint64) error {
 
 func (db *appdbimpl) ListComment(pid uint64) ([]Comment, error) {
 
-	rows, err := db.c.Query("SELECT c.id, c.user_id, c.photo_id, p.user_id, c.text  FROM photos p, comment c WHERE p.id = ? AND p.id = c.photo_id", pid)
+	rows, err := db.c.Query("SELECT c.id, c.user_id, c.photo_id, p.user_id, c.texts  FROM photos p, comment c WHERE p.id = ? AND p.id = c.photo_id", pid)
 	if err != nil {
 		return nil, rows.Err()
 	}

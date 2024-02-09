@@ -308,7 +308,7 @@ paths:
                 maxItems: 99999
               
   
-  /users/{username}:
+  /users/{username}/profile:
     parameters:
        - $ref: "#/components/parameters/username"
     
@@ -335,6 +335,9 @@ paths:
         "500": 
           description: The server encountered an internal error. Further info in server logs.
   
+  /users/{username}:
+    parameters:
+       - $ref: "#/components/parameters/username"
 
     put:
       security:
