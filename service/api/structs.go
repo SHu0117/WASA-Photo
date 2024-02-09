@@ -70,6 +70,7 @@ func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.N_likes = photo.N_likes
 	p.N_comments = photo.N_comments
 	p.Upload_time = photo.Upload_time
+	p.File = photo.File
 }
 
 func (p *Photo) PhotoToDatabase() database.Photo {
@@ -79,6 +80,7 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 		N_likes:     p.N_likes,
 		N_comments:  p.N_comments,
 		Upload_time: p.Upload_time,
+		File:        p.File,
 	}
 }
 
