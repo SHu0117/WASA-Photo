@@ -35,7 +35,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
+	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -102,7 +102,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	user.UserFromDatabase(dbuser)
 
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
+	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		w.WriteHeader(http.StatusUnauthorized)

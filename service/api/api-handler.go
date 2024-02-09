@@ -11,19 +11,20 @@ func (rt *_router) Handler() http.Handler {
 
 	rt.router.POST("/sessions", rt.wrap(rt.doLogin))
 	rt.router.GET("/users/:username/homepage", rt.wrap(rt.getMyStream))
+	rt.router.PUT("/users/:username", rt.wrap(rt.setMyUserName))
 
-	rt.router.POST("/users/:username/photo/", rt.wrap(rt.uploadPhoto))
-	rt.router.GET("/users/:username/photo/", rt.wrap(rt.getUserPhoto))
-	rt.router.DELETE("/users/:username/photo/:pid", rt.wrap(rt.deletePhoto))
-	rt.router.GET("/users/:username/photo/:pid", rt.wrap(rt.getPhoto))
+	rt.router.POST("/users/:username/photos/", rt.wrap(rt.uploadPhoto))
+	rt.router.GET("/users/:username/photos/", rt.wrap(rt.getUserPhoto))
+	rt.router.DELETE("/users/:username/photos/:pid", rt.wrap(rt.deletePhoto))
+	rt.router.GET("/users/:username/photos/:pid", rt.wrap(rt.getPhoto))
 
-	rt.router.PUT("/users/:username/photo/:pid/likes/:likeUsername", rt.wrap(rt.likePhoto))
-	rt.router.DELETE("/users/:username/photo/:pid/likes/:likeUsername", rt.wrap(rt.unlikePhoto))
-	rt.router.GET("/users/:username/photo/:pid/likes", rt.wrap(rt.getPhotoLikes))
+	rt.router.PUT("/users/:username/photos/:pid/likes/:likeUsername", rt.wrap(rt.likePhoto))
+	rt.router.DELETE("/users/:username/photos/:pid/likes/:likeUsername", rt.wrap(rt.unlikePhoto))
+	rt.router.GET("/users/:username/photos/:pid/likes", rt.wrap(rt.getPhotoLikes))
 
-	rt.router.PUT("/users/:username/photo/:pid/comments/:commentUsername", rt.wrap(rt.commentPhoto))
-	rt.router.DELETE("/users/:username/photo/:pid/comments/:commentUsername", rt.wrap(rt.uncommentPhoto))
-	rt.router.GET("/users/:username/photo/:pid/comments", rt.wrap(rt.getPhotoComments))
+	rt.router.POST("/users/:username/photos/:pid/comments/", rt.wrap(rt.commentPhoto))
+	rt.router.DELETE("/users/:username/photos/:pid/comments/:commentUsername", rt.wrap(rt.uncommentPhoto))
+	rt.router.GET("/users/:username/photos/:pid/comments/", rt.wrap(rt.getPhotoComments))
 
 	rt.router.PUT("/users/:username/following/:followUsername", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:username/following/:followUsername", rt.wrap(rt.unfollowUser))

@@ -123,11 +123,6 @@ components:
           minLength: 3
           maxLength: 16
           readOnly: false
-          
-    uid:
-      title: uid
-      type: integer
-      description: identifier
       
         
     Photo:
@@ -171,6 +166,25 @@ components:
         text:
           description: the text of the comment
           type: string
+    
+    Like:
+      title: Like
+      description: this object represents a single comment 
+      type: object
+      properties:
+        id:
+          description: the identifier of the like
+          type: integer
+          format: int64
+          example: 999
+        username:
+          description: the username of the user that liked the photo
+          type: string
+          pattern: '^.*?$'
+          example: Leo
+          minLength: 3
+          maxLength: 16
+          
             
     
     Profile:
@@ -203,19 +217,13 @@ components:
       type: object
       properties:
         followedUser:
-          description: Unique user username.
-          type: string
-          pattern: '^.*?$'
-          example: Siwei
-          minLength: 3
-          maxLength: 16
+          description: Unique user identifier.
+          type: integer
+          example: 1
         userId:
-          description: Unique user username.
-          type: string
-          pattern: '^.*?$'
-          example: Leo
-          minLength: 3
-          maxLength: 16
+          description: Unique user identifier
+          type: integer
+          example: 1
     
     Ban:
       title: Ban
@@ -223,19 +231,13 @@ components:
       type: object
       properties:
         bannedUser:
-          description: Unique user username.
-          type: string
-          pattern: '^.*?$'
-          example: Siwei
-          minLength: 3
-          maxLength: 16
+          description: Unique user identifier.
+          type: integer
+          example: 1
         userId:
-          description: Unique user username.
-          type: string
-          pattern: '^.*?$'
-          example: Alessio
-          minLength: 3
-          maxLength: 16
+          description: Unique user identifier.
+          type: integer
+          example: 1
             
           
           
@@ -276,13 +278,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  identifier:
-                  # change here if you decide to use an integer
-                  # or any other type of identifier
-                    type: string
-                    example: "abcdef012345"
+                $ref: "#/components/schemas/User"
                     
       
                 
@@ -357,7 +353,7 @@ paths:
                 minLength: 3
                 maxLength: 16
       responses:
-        "200":
+        "201":
           description: Username updated successfully
           content:
             application/json:
@@ -380,6 +376,28 @@ paths:
   /users/{username}/photos/:
     parameters: 
       - $ref: "#/components/parameters/username"
+    
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - photo
+      operationId: getUserPhoto
+      summary: get user's photo that he have uploaded
+      description: |
+          getting all photos of this user have uploaded including all details about the photo
+      responses:
+        '200':
+          description: photo of the user retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Photo"}
+                minItems: 0
+                maxItems: 99999
+      
+      
       
     post:
       security:
@@ -425,6 +443,7 @@ paths:
         - bearerAuth : []
       tags:
         - photo
+      operationId: getPhoto
       summary: Get photo details
       description: Retrieve details of a specific photo
       responses:
@@ -453,13 +472,39 @@ paths:
         "500": 
           description: The server encountered an internal error. Further info in server logs.
 
-
+  
+  /users/{username}/photos/{pid}/likes:
+    parameters: 
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/pid"
+    
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - photo
+      operationId: getPhotoLikes
+      summary: get photo's like list
+      description: |
+          getting all likes of this photo
+      responses:
+        '200':
+          description: likes of the photo retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Like"}
+                minItems: 0
+                maxItems: 99999
+    
+      
   /users/{username}/photos/{pid}/likes/{likeUsername}:
     parameters: 
       - $ref: "#/components/parameters/username"
       - $ref: "#/components/parameters/pid"
       - $ref: "#/components/parameters/likeUsername"
-    
+                
     put:
       security:
           - bearerAuth: []
@@ -473,7 +518,7 @@ paths:
           description:  operation successfull
           content:
             application/json:
-              schema: { $ref : "#/components/schemas/uid"}
+              schema: { $ref : "#/components/schemas/User"}
               
               
     delete:
@@ -488,7 +533,30 @@ paths:
         '204':
           description:  operation successfull
           
-  
+  /users/{username}/following/:
+    parameters: 
+      - $ref: "#/components/parameters/username"
+      
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - user
+      operationId: listFollowed
+      summary: get user's follow list
+      description: |
+          getting all followers of this user, user objects will be returned
+      responses:
+        '200':
+          description: follow list of the user retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User"}
+                minItems: 0
+                maxItems: 99999
+                
   /users/{username}/following/{followUsername}: 
     parameters:
       - $ref: "#/components/parameters/username"
@@ -546,8 +614,28 @@ paths:
           content:
             application/json:
               schema: { $ref : "#/components/schemas/Comment"}
-              
-              
+    
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - photo
+      operationId: getPhotoComments
+      summary: get photo's comment list
+      description: |
+          getting all comments of this photo
+      responses:
+        '200':
+          description: photo of the user retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Comment"}
+                minItems: 0
+                maxItems: 99999
+                
+  
   /users/{username}/photos/{pid}/comments/{commentUsername}:
   
     parameters: 
@@ -568,7 +656,31 @@ paths:
           description:  operation successfull
           
 
-              
+  /users/{username}/banned/:
+    parameters: 
+      - $ref: "#/components/parameters/username"
+      
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - user
+      operationId: listBanned
+      summary: get user's ban list
+      description: |
+          getting all banned user of this user
+      responses:
+        '200':
+          description: ban list of the user retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User"}
+                minItems: 0
+                maxItems: 99999
+                
+    
   /users/{username}/banned/{banUsername}:
     parameters: 
       - $ref: "#/components/parameters/username"
@@ -601,8 +713,6 @@ paths:
         '204':
           description:  operation successfull
 
-   
-
               
               
               
@@ -613,5 +723,4 @@ paths:
                 
               
               
-#              
-        
+# 

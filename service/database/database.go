@@ -82,7 +82,6 @@ type Comment struct {
 type AppDatabase interface {
 	NewUser(User) (User, error)
 	UploadPhoto(Photo) (Photo, error)
-	//GetMyStream() ([]Photo, error)
 	SetUsername(user User, username string) error
 	FollowUser(Following) (Following, error)
 	UnfollowUser(Following) error

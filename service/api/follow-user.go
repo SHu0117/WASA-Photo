@@ -39,7 +39,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	user.UserFromDatabase(dbuser)
 	following.Followed_id = user.ID
 
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(following.Follower_id))
+	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return

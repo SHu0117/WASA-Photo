@@ -30,7 +30,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	err = rt.db.ExistUsername(new)
-	if err != database.ErrDataDoesNotExist {
+	if !errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -38,7 +38,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	photo.User_id = user.ID
 	currentTime := time.Now().UTC()
 	photo.Upload_time = currentTime.Format("2006-01-02 15:04:05")
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(photo.User_id))
+	auth := checkAuthorization(r.Header.Get("Authorization"), photo.User_id)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
@@ -146,7 +146,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 	user.UserFromDatabase(dbuser)
 
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
+	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
@@ -241,7 +241,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 	user.UserFromDatabase(dbuser)
 
-	auth := checkAuthorization(r.Header.Get("Authorization"), uint64(user.ID))
+	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
 	if auth != 0 {
 		w.WriteHeader(auth)
 		return
