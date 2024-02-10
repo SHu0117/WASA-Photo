@@ -9,7 +9,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/", rt.getHelloWorld)
 	rt.router.GET("/context", rt.wrap(rt.getContextReply))
 
-	rt.router.POST("/sessions", rt.wrap(rt.doLogin))
+	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	rt.router.GET("/users/:username/homepage", rt.wrap(rt.getMyStream))
 	rt.router.PUT("/users/:username", rt.wrap(rt.setMyUserName))
 	rt.router.GET("/users/:username/profile", rt.wrap(rt.getUserProfile))
