@@ -17,11 +17,11 @@ export default {
                 this.errormsg = "Username cannot be empty.";
             } else {
                 try {
-                    let response = await this.$axios.post("/session", { username: this.username })
+                    let response = await this.$axios.post("/session", {username: this.username})
                     this.user = response.data
                     localStorage.setItem("requesterID", this.user.id);
                     localStorage.setItem("username", this.user.username);
-                    this.$router.push({ path: '/session' })
+                    this.$router.replace('/homepage')
                 } catch (e) {
                     if (e.response && e.response.status === 400) {
                         this.errormsg = "Form error, please try again";
