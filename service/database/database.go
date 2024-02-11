@@ -45,12 +45,14 @@ type User struct {
 }
 
 type Photo struct {
-	ID          uint64
-	User_id     uint64
-	File        []byte
-	N_likes     int64
-	N_comments  int64
-	Upload_time string
+	ID            uint64 `json:"id"`
+	User_id       uint64 `json:"userId"`
+	User_username string `json:"username"`
+	N_likes       int64  `json:"likesN"`
+	N_comments    int64  `json:"commentsN"`
+	Upload_time   string `json:"uploadtime"`
+	File          string `json:"file"`
+	IsLiked       bool   `json:"isliked"`
 }
 
 type Following struct {
@@ -71,11 +73,11 @@ type Like struct {
 }
 
 type Comment struct {
-	ID         uint64
-	User_id    uint64
-	Photo_id   uint64
-	Photo_user uint64
-	Text       string
+	ID         uint64 `json:"id"`
+	User_id    uint64 `json:"user_id"`
+	Photo_id   uint64 `json:"photo_id"`
+	Photo_user uint64 `json:"photo_Owner"`
+	Text       string `json:"text"`
 }
 
 // AppDatabase is the high level interface for the DB
@@ -97,8 +99,8 @@ type AppDatabase interface {
 	DeletePhoto(id uint64) error
 	GetUserID(username string) (User, error)
 	GetMyStream(u User) ([]Photo, error)
-	GetUserPhotos(u User) ([]Photo, error)
-	GetPhoto(pid uint64) (Photo, error)
+	GetUserPhotos(u User, requesterID uint64) ([]Photo, error)
+	// GetPhoto(pid uint64) (Photo, error)
 	LikePhoto(l Like) (Like, error)
 	UnlikePhoto(pid uint64, uid uint64) error
 	ListLikes(pid uint64) ([]User, error)
@@ -110,6 +112,7 @@ type AppDatabase interface {
 	CountFollower(user User) (int, error)
 	CheckIfFollowed(targetID uint64, requesterID uint64) (bool, error)
 	CheckIfBanned(targetID uint64, requesterID uint64) (bool, error)
+	CheckIfLiked(targetID uint64, requesterID uint64) (bool, error)
 	Ping() error
 }
 
@@ -154,7 +157,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		photoTable := `CREATE TABLE IF NOT EXISTS photos(
 			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 			user_id INTEGER NOT NULL,
-			file BLOB,
+			file TEXT NOT NULL,
 			upload_time TEXT,
 			FOREIGN KEY(user_id) REFERENCES user(id));`
 

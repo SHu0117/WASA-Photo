@@ -59,57 +59,23 @@ export default {
 	},
 	methods: {
 		async refresh() {
-			this.myOwnProfile()
-			this.getStream()
+			this.userProfile()
+			this.getPhotos()
 		},
-		async selectFile() {
-			this.images = this.$refs.file.files[0] // Get the first file
-		},
-		async Upload() {
-			if (this.images === null) {
-				this.errormsg = "Please select a file to upload."
-			} else {
-				// Prepare the FormData object to send the file
-				let formData = new FormData();
-    			formData.append('image', this.images);
-				try {
-					let response = await this.$axios.post("/users/" + this.username + "/photos/", formData, {
-						headers: {
-							Authorization: "Bearer " + localStorage.getItem("requesterID"),
-							'Content-Type': 'multipart/form-data'
-						}
-					})
-					this.profile = response.data
-					this.errormsg = "Photo uploaded successfully."
-					this.refresh()
-				} catch (e) {
-					if (e.response && e.response.status === 400) {
-						this.errormsg = "Form error, please try again.";
-						this.detailedmsg = null;
-					} else if (e.response && e.response.status === 500) {
-						this.errormsg = "An internal error occurred. Please try again later.";
-					} else {
-						this.errormsg = e.toString();
-					}
-				}
-			}
-		},
-		async getStream() {
+        async userProfile() {
 			try {
-				let response = await this.$axios.get("/users/" + this.username + "/homepage", {
+				let response = await this.$axios.get("users/" + this.$route.params.username + "/profile", {
 					headers: {
 						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
 				})
-				this.Stream = response.data
-				for (let i = 0; i < this.Stream.length; i++) {
-					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
-				}
+				this.profile = response.data
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
-					this.errormsg = "Form error, please try again";
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
 				} else if (e.response && e.response.status === 500) {
-					this.errormsg = "An internal error occurred. Please try again later.";
+					this.errormsg = "No one found";
 				} else {
 					this.errormsg = e.toString();
 				}
@@ -117,7 +83,7 @@ export default {
 		},
 		async getPhotos() {
 			try {
-				let response = await this.$axios.get("/users/" + this.username + "/photos/", {
+				let response = await this.$axios.get("/users/" + this.$route.params.username + "/photos/", {
 					headers: {
 						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
@@ -149,7 +115,7 @@ export default {
 						}
 					})
 					this.profile = response.data
-					this.$router.push({ path: '/users/' + this.usernameToSearch + '/profile' }) // Da cambiare
+					this.$router.push({ path: '/users/' + this.searchUserUsername + '/profile' }) // Da cambiare
 				} catch (e) {
 					if (e.response && e.response.status === 400) {
 						this.errormsg = "Form error, please try again.";
@@ -159,25 +125,6 @@ export default {
 					} else {
 						this.errormsg = e.toString();
 					}
-				}
-			}
-		},
-		async myOwnProfile() {
-			try {
-				let response = await this.$axios.get("users/" + this.username + "/profile", {
-					headers: {
-						Authorization: "Bearer " + localStorage.getItem("requesterID")
-					}
-				})
-				this.profile = response.data
-			} catch (e) {
-				if (e.response && e.response.status === 400) {
-					this.errormsg = "Form error, please try again.";
-					this.detailedmsg = null;
-				} else if (e.response && e.response.status === 500) {
-					this.errormsg = "No one found";
-				} else {
-					this.errormsg = e.toString();
 				}
 			}
 		},
@@ -269,6 +216,86 @@ export default {
 				}
 			}
 		},
+        async followUser() {
+			try {
+				let response = await this.$axios.put("/users/" + this.username + "/following/" + this.$route.params.username, {}, {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.clear = response.data
+				this.refresh()
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+        async unfollowUser() {
+			try {
+				let response = await this.$axios.delete("/users/" + this.username + "/following/" + this.$route.params.username, {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.clear = response.data
+				this.refresh()
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+        async banUser() {
+			try {
+				let response = await this.$axios.put("/users/" + this.username + "/banned/" + this.$route.params.username, {}, {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.clear = response.data
+				this.refresh()
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+        async unbanUser() {
+			try {
+				let response = await this.$axios.delete("/users/" + this.username + "/banned/" + this.$route.params.username, {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.clear = response.data
+				this.refresh()
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
 		async doLogout() {
 			localStorage.removeItem("requesterID")
 			localStorage.removeItem("username")
@@ -310,17 +337,8 @@ export default {
 					<!-- Profile Information Column -->
 					<div class="col-md-4">
 						<!-- Existing Content Column -->
-						<div>
-							<!-- File Chooser and Upload Button -->
-							<div class="btn-group mb-2">
-								<input type="file" accept="image/*" class="btn" @change="selectFile" ref="file" style="background-color: #f8f9fa; border-color: #ced4da;">
-								<button type="button" class="btn btn-sm" @click="Upload" style="background-color: #28a745; color: white;">
-									Upload
-								</button>
-							</div>
-						</div>
 						<div class="profile-info mt-3">
-							<h2>My Profile</h2>
+							<h2>{{ this.profile.username }}'s Profile</h2>
 							<div class="info-row">
 								<p><strong>Username:</strong><span><strong>{{ this.profile.username }}</strong></span></p>
 							</div>
@@ -333,7 +351,15 @@ export default {
 							<div class="info-row">
 								<p><strong>Photos:</strong><span><strong>{{ this.profile.photos }}</strong></span></p>
 							</div>
-						</div>
+                            <div class="info-row">
+                                <button type="button" v-if="profile.isBanned==true" class="btn btn-primary btn-custom" @click="unbanUser()" style="background-color: #28a745; color: white;">UnBAN</button>
+							    <button type="button" v-if="profile.isBanned==false" class="btn btn-primary btn-custom" @click="banUser()" style="background-color: #dc3545; color: white;">BAN</button>									
+                            </div>
+                            <div class="info-row">
+                                <button type="button" v-if="profile.isFollowed==true" class="btn btn-primary btn-custom" @click="unfollowUser(this.username)" style="background-color: #dc3545; color: white;">UnFollow</button>
+							    <button type="button" v-if="profile.isFollowed==false" class="btn btn-primary btn-custom" @click="followUser()" style="background-color: #28a745; color: white;">Follow</button>
+                            </div>
+                        </div>
 					</div>
 		
 					<!-- Photo Content Column -->
@@ -428,4 +454,3 @@ export default {
 	margin-bottom: 30px; /* or any other value */
   }
 </style>
-

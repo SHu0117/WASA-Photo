@@ -56,31 +56,37 @@ func (banning *Banning) BanningToDatabase() database.Banning {
 }
 
 type Photo struct {
-	ID          uint64 `json:"id"`
-	User_id     uint64 `json:"userId"`
-	N_likes     int64  `json:"likesN"`
-	N_comments  int64  `json:"commentsN"`
-	Upload_time string `json:"uploadtime"`
-	File        []byte `json:"file"`
+	ID            uint64 `json:"id"`
+	User_id       uint64 `json:"userId"`
+	User_username string `json:"username"`
+	N_likes       int64  `json:"likesN"`
+	N_comments    int64  `json:"commentsN"`
+	Upload_time   string `json:"uploadtime"`
+	File          string `json:"file"`
+	IsLiked       bool   `json:"isliked"`
 }
 
 func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.ID = photo.ID
 	p.User_id = photo.User_id
+	p.User_username = photo.User_username
 	p.N_likes = photo.N_likes
 	p.N_comments = photo.N_comments
 	p.Upload_time = photo.Upload_time
 	p.File = photo.File
+	p.IsLiked = photo.IsLiked
 }
 
 func (p *Photo) PhotoToDatabase() database.Photo {
 	return database.Photo{
-		ID:          p.ID,
-		User_id:     p.User_id,
-		N_likes:     p.N_likes,
-		N_comments:  p.N_comments,
-		Upload_time: p.Upload_time,
-		File:        p.File,
+		ID:            p.ID,
+		User_id:       p.User_id,
+		User_username: p.User_username,
+		N_likes:       p.N_likes,
+		N_comments:    p.N_comments,
+		Upload_time:   p.Upload_time,
+		File:          p.File,
+		IsLiked:       p.IsLiked,
 	}
 }
 
@@ -110,9 +116,9 @@ func (l *Like) LikeToDatabase() database.Like {
 
 type Comment struct {
 	ID         uint64 `json:"id"`
-	User_id    uint64 `json:"userId"`
-	Photo_id   uint64 `json:"photoId"`
-	Photo_user uint64 `json:"photoOwner"`
+	User_id    uint64 `json:"user_id"`
+	Photo_id   uint64 `json:"photo_id"`
+	Photo_user uint64 `json:"photo_Owner"`
 	Text       string `json:"text"`
 }
 

@@ -65,7 +65,6 @@ func checkAuthorization(authorization string, id uint64) int {
 	if err != nil {
 		return http.StatusInternalServerError
 	}
-
 	if id != authID {
 		return http.StatusUnauthorized
 	}

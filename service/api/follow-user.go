@@ -25,10 +25,6 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	following.Follower_id = user.ID
 
 	pathFollowUsername := ps.ByName("followUsername")
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	dbuser, err = rt.db.GetUserID(pathFollowUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -91,16 +87,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	var following Following
 	following.Follower_id = user.ID
 
-	if following.Follower_id == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	pathFollowUsername := ps.ByName("followUsername")
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	dbuser, err = rt.db.GetUserID(pathFollowUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -121,7 +108,6 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	auth := checkAuthorization(r.Header.Get("Authorization"), following.Follower_id)
 	if auth != 0 {
 		w.WriteHeader(auth)

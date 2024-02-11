@@ -2,6 +2,7 @@ package api
 
 import (
 	// "bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 
@@ -43,30 +44,32 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	data, err := io.ReadAll(r.Body)
+	// Parse the multipart form
+	r.ParseMultipartForm(10 << 20) // Limit upload size
+
+	// Retrieve the file from posted form-data
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		// Handle error
+		return
+	}
+	defer file.Close()
+
+	// Read the file data
+	data, err := io.ReadAll(file)
+	if err != nil {
+		// Handle error
+		return
+	}
 	if err != nil {
 		ctx.Logger.WithError(err).Error("error reading body content")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close()
 
-	/**
-	r.Body = io.NopCloser(bytes.NewBuffer(data))
-
-	// Check if the body content is either a png image
-	_, errPng := png.Decode(r.Body)
-	if errPng != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		ctx.Logger.WithError(err).Error("body contains file that is not png")
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "images must be png"})
-		return
-	}
-
-	// Body has been read in the previous function so it's necessary to reassign a io.ReadCloser to it
-	r.Body = io.NopCloser(bytes.NewBuffer(data))
-	**/
-	photo.File = data
+	encodedString := base64.StdEncoding.EncodeToString(data)
+	photo.File = encodedString
 
 	// Generate a unique id for the photo
 	dbPhoto, err := rt.db.UploadPhoto(photo.PhotoToDatabase())
@@ -78,6 +81,8 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	photo.PhotoFromDatabase(dbPhoto)
+	photo.User_username = user.Username
+	photo.IsLiked = false
 	// controllaerrore
 	// _ = json.NewEncoder(w).Encode(PhotoId{IdPhoto: photoIdInt})
 	_ = json.NewEncoder(w).Encode(photo)
@@ -127,40 +132,44 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.WriteHeader(http.StatusNoContent)
 }
 
+/*
+*
 func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	requesterID := getToken(r.Header.Get("Authorization"))
-	err := rt.db.ExistUID(requesterID)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		requesterID := getToken(r.Header.Get("Authorization"))
+		err := rt.db.ExistUID(requesterID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		photoId, err1 := strconv.Atoi(ps.ByName("pid"))
+		if err1 != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = rt.db.ExistPhoto(uint64(photoId))
+		if errors.Is(err, database.ErrDataDoesNotExist) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		var photo Photo
+		dbphoto, err := rt.db.GetPhoto(uint64(photoId))
+		if err != nil {
+			ctx.Logger.WithError(err).Error("can't get the corrisponding photo ")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		photo.PhotoFromDatabase(dbphoto)
+		w.Header().Set("Content-Type", "image/*")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(photo)
 	}
 
-	photoId, err1 := strconv.Atoi(ps.ByName("pid"))
-	if err1 != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	err = rt.db.ExistPhoto(uint64(photoId))
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	var photo Photo
-	dbphoto, err := rt.db.GetPhoto(uint64(photoId))
-	if err != nil {
-		ctx.Logger.WithError(err).Error("can't get the corrisponding photo ")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	photo.PhotoFromDatabase(dbphoto)
-	w.Header().Set("Content-Type", "image/*")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(photo)
-}
-
+*
+*/
 func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	pathUsername := ps.ByName("username")
@@ -193,7 +202,7 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	var list []database.Photo
-	dblist, err := rt.db.GetUserPhotos(dbuser)
+	dblist, err := rt.db.GetUserPhotos(dbuser, requesterID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get the list ")
 		w.WriteHeader(http.StatusInternalServerError)
