@@ -73,18 +73,17 @@ components:
       required: true
       description: identifier for users of like
     
-    commentUsername:
-      schema:
-        description: username schema.
-        type: string
-        pattern: '^.*?$'
-        example: SiweiHu
-        minLength: 5
-        maxLength: 16
-      name: commentUsername
+    cid:
+      schema: 
+        description: Int64 between 0-9999
+        type: integer
+        format: int64
+        example : 999
+        readOnly: true
+      name: cid
       in: path
+      description: A comment unique identifier
       required: true
-      description: identifier for users to ban
     
     
     pid:
@@ -440,7 +439,22 @@ paths:
     parameters: 
       - $ref: "#/components/parameters/username"
       - $ref: "#/components/parameters/pid"
-     
+    
+    get:
+      security:
+        - bearerAuth : []
+      tags:
+        - photo
+      operationId: getPhoto
+      summary: Get photo details
+      description: Retrieve details of a specific photo
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Photo" }
+    
     delete:
       security:
         - bearerAuth: []
@@ -624,12 +638,12 @@ paths:
                 maxItems: 99999
                 
   
-  /users/{username}/photos/{pid}/comments/{commentUsername}:
+  /users/{username}/photos/{pid}/comments/{cid}:
   
     parameters: 
       - $ref: "#/components/parameters/username"
       - $ref: "#/components/parameters/pid"
-      - $ref: "#/components/parameters/commentUsername"
+      - $ref: "#/components/parameters/cid"
       
     delete:
       security:

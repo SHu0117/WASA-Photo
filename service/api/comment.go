@@ -35,6 +35,14 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 	comment.User_id = requesterID
+	var user User
+	dbuser, err := rt.db.GetUsername(requesterID)
+	if errors.Is(err, database.ErrDataDoesNotExist) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	user.UserFromDatabase(dbuser)
+	comment.User_username = user.Username
 	photoId, err1 := strconv.Atoi(ps.ByName("pid"))
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -54,9 +62,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	var user User
-	dbuser, err := rt.db.GetUserID(pathOwner)
+	dbuser, err = rt.db.GetUserID(pathOwner)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -82,26 +88,13 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	pathUsername := ps.ByName("commentUsername")
-	err := rt.db.ExistUsername(pathUsername)
+	pathCommentID, err := strconv.Atoi(ps.ByName("cid"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	dbuser, err := rt.db.GetUserID(pathUsername)
-	if errors.Is(err, database.ErrDataDoesNotExist) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	var user User
-	user.UserFromDatabase(dbuser)
 
-	auth := checkAuthorization(r.Header.Get("Authorization"), user.ID)
-	if auth != 0 {
-		w.WriteHeader(auth)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	requesterID := getToken(r.Header.Get("Authorization"))
 
 	photoId, err1 := strconv.Atoi(ps.ByName("pid"))
 	if err1 != nil {
@@ -115,7 +108,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	err = rt.db.UncommentPhoto(uint64(photoId), user.ID)
+	err = rt.db.UncommentPhoto(uint64(photoId), requesterID, uint64(pathCommentID))
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't delete the corrisponding comment ")
 		w.WriteHeader(http.StatusInternalServerError)

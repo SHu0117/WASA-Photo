@@ -20,9 +20,9 @@ func (db *appdbimpl) CommentPhoto(c Comment) (Comment, error) {
 	return c, nil
 }
 
-func (db *appdbimpl) UncommentPhoto(pid uint64, uid uint64) error {
+func (db *appdbimpl) UncommentPhoto(pid uint64, uid uint64, cid uint64) error {
 
-	res, err := db.c.Exec(`DELETE FROM comment WHERE photo_id=? AND user_id = ?`, pid, uid)
+	res, err := db.c.Exec(`DELETE FROM comment WHERE photo_id=? AND user_id = ? AND id = ?`, pid, uid, cid)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (db *appdbimpl) UncommentPhoto(pid uint64, uid uint64) error {
 
 func (db *appdbimpl) ListComment(pid uint64) ([]Comment, error) {
 
-	rows, err := db.c.Query("SELECT c.id, c.user_id, c.photo_id, p.user_id, c.texts  FROM photos p, comment c WHERE p.id = ? AND p.id = c.photo_id", pid)
+	rows, err := db.c.Query("SELECT c.id, c.user_id, u.username, c.photo_id, p.user_id, c.texts  FROM photos p, comment c, user u WHERE p.id = ? AND p.id = c.photo_id AND c.user_id = u.id", pid)
 	if err != nil {
 		return nil, rows.Err()
 	}
@@ -49,7 +49,7 @@ func (db *appdbimpl) ListComment(pid uint64) ([]Comment, error) {
 	var listComment []Comment
 	for rows.Next() {
 		var comment Comment
-		err = rows.Scan(&comment.ID, &comment.User_id, &comment.Photo_id, &comment.Photo_user, &comment.Text)
+		err = rows.Scan(&comment.ID, &comment.User_id, &comment.User_username, &comment.Photo_id, &comment.Photo_user, &comment.Text)
 		if err != nil {
 			return nil, err
 		}

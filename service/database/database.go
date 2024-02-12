@@ -73,11 +73,12 @@ type Like struct {
 }
 
 type Comment struct {
-	ID         uint64 `json:"id"`
-	User_id    uint64 `json:"user_id"`
-	Photo_id   uint64 `json:"photo_id"`
-	Photo_user uint64 `json:"photo_Owner"`
-	Text       string `json:"text"`
+	ID            uint64 `json:"id"`
+	User_id       uint64 `json:"user_id"`
+	User_username string `json:"username"`
+	Photo_id      uint64 `json:"photo_id"`
+	Photo_user    uint64 `json:"photo_Owner"`
+	Text          string `json:"text"`
 }
 
 // AppDatabase is the high level interface for the DB
@@ -98,6 +99,7 @@ type AppDatabase interface {
 	CheckBeingBanned(user User, requesterID uint64) (bool, error)
 	DeletePhoto(id uint64) error
 	GetUserID(username string) (User, error)
+	GetUsername(id uint64) (User, error)
 	GetMyStream(u User) ([]Photo, error)
 	GetUserPhotos(u User, requesterID uint64) ([]Photo, error)
 	// GetPhoto(pid uint64) (Photo, error)
@@ -105,7 +107,7 @@ type AppDatabase interface {
 	UnlikePhoto(pid uint64, uid uint64) error
 	ListLikes(pid uint64) ([]User, error)
 	CommentPhoto(c Comment) (Comment, error)
-	UncommentPhoto(pid uint64, uid uint64) error
+	UncommentPhoto(pid uint64, uid uint64, cid uint64) error
 	ListComment(pid uint64) ([]Comment, error)
 	CountFollowed(user User) (int, error)
 	CountPhotos(u User) (int, error)

@@ -115,16 +115,18 @@ func (l *Like) LikeToDatabase() database.Like {
 }
 
 type Comment struct {
-	ID         uint64 `json:"id"`
-	User_id    uint64 `json:"user_id"`
-	Photo_id   uint64 `json:"photo_id"`
-	Photo_user uint64 `json:"photo_Owner"`
-	Text       string `json:"text"`
+	ID            uint64 `json:"id"`
+	User_id       uint64 `json:"user_id"`
+	User_username string `json:"username"`
+	Photo_id      uint64 `json:"photo_id"`
+	Photo_user    uint64 `json:"photo_Owner"`
+	Text          string `json:"text"`
 }
 
 func (c *Comment) CommentFromDatabase(comment database.Comment) {
 	c.ID = comment.ID
 	c.User_id = comment.User_id
+	c.User_username = comment.User_username
 	c.Photo_id = comment.Photo_id
 	c.Photo_user = comment.Photo_user
 	c.Text = comment.Text
@@ -132,11 +134,12 @@ func (c *Comment) CommentFromDatabase(comment database.Comment) {
 
 func (c *Comment) CommentToDatabase() database.Comment {
 	return database.Comment{
-		ID:         c.ID,
-		User_id:    c.User_id,
-		Photo_id:   c.Photo_id,
-		Photo_user: c.Photo_user,
-		Text:       c.Text,
+		ID:            c.ID,
+		User_id:       c.User_id,
+		User_username: c.User_username,
+		Photo_id:      c.Photo_id,
+		Photo_user:    c.Photo_user,
+		Text:          c.Text,
 	}
 }
 

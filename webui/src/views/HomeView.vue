@@ -14,15 +14,16 @@ export default {
 			Comments: {
 				comment: [
 					{
-						ID: 0,
-						User_id: 0,
-						Photo_id: 0,
-						Photo_user: 0,
-						Text: "",
+						id: 0,
+						user_id: 0,
+						username: "",
+						photo_id: 0,
+						photo_Owner: 0,
+						text: "",
 					}
 				],
 			},
-			comment: "",
+			commentText: "",
 			Stream: {
 				photo: [
 					{
@@ -38,6 +39,8 @@ export default {
 				],
 			},
 			usernameToSearch: "",
+			photoUsername: "",
+			photoId: 0,
 			like: {
 				ID: 0,
 				User_id: 0,
@@ -111,7 +114,7 @@ export default {
 				} else if (e.response && e.response.status === 500) {
 					this.errormsg = "An internal error occurred. Please try again later.";
 				} else {
-					this.errormsg = e.toString();
+					this.errormsg = e.toString() + e.response.status.toString();
 				}
 			}
 		},
@@ -153,9 +156,11 @@ export default {
 				} catch (e) {
 					if (e.response && e.response.status === 400) {
 						this.errormsg = "Form error, please try again.";
-						this.detailedmsg = null;
 					} else if (e.response && e.response.status === 500) {
 						this.errormsg = "No one found";
+					}
+					else if (e.response && e.response.status === 403) {
+						this.errormsg = "Ops, cant's get the user profile, you've been banned by the user!";
 					} else {
 						this.errormsg = e.toString();
 					}
@@ -181,12 +186,12 @@ export default {
 				}
 			}
 		},
-		async commentPhoto(username, Photo_id, comment) {
-			if (comment === "") {
+		async commentPhoto(username, Photo_id) {
+			if (this.commentText === "") {
 				this.errormsg = "Emtpy comment is not valid."
 			} else {
 				try {
-					let response = await this.$axios.post("/users/" + username + "/photos/" + Photo_id + "/comments/", { text: comment }, {
+					let response = await this.$axios.post("/users/" + username + "/photos/" + Photo_id + "/comments/", { text: this.commentText }, {
 						headers: {
 							Authorization: "Bearer " + localStorage.getItem("requesterID")
 						}
@@ -205,26 +210,25 @@ export default {
 				}
 			}
 		},
-		async openLog(username, photoid) {
+		async openCommentsLog(username, Photo_id) {
 			try {
-				let response = await this.$axios.get("/users/" + username + "/photo/" + photoid + "/comment", {
+				let response = await this.$axios.get("/users/" + username + "/photos/" + Photo_id + "/comments/", {
 					headers: {
-						Authorization: "Bearer " + localStorage.getItem("token")
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
 				})
-				this.photoComments = response.data;
-				const modal = new bootstrap.Modal(document.getElementById('logviewer'));
-				modal.show();
+				this.Comments = response.data;
+				this.photoUsername = username;
+				this.photoId = Photo_id;
+				var myModal = new bootstrap.Modal(document.getElementById('commentsLogModal'));
+    			myModal.show();
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
-					this.errormsg = "Form error, please check all fields and try again. If you think that this is an error, write an e-mail to us.";
-					this.detailedmsg = null;
+					this.errormsg = "Form error, please try again.";
 				} else if (e.response && e.response.status === 500) {
-					this.errormsg = "An internal error occurred. We will be notified. Please try again later.";
-					this.detailedmsg = e.toString();
+					this.errormsg = "An internal error occurred. Please try again later.";
 				} else {
 					this.errormsg = e.toString();
-					this.detailedmsg = null;
 				}
 			}
 		},
@@ -339,33 +343,61 @@ export default {
 					<!-- Photo Content Column -->
 					<div class="col-md-8">
 						<div class="row">
-							<h1 class="h2 my-auto"><strong>Photo uploaded by </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
-							<div class="col-md-4 custom-margin" v-for="photo in Stream" :key="photo.id">
-								<!-- Bootstrap card -->
-								<div class="card">
-								  <!-- Image at the top of the card -->
-								  <img class="card-img-top" :src="photo.file" alt="Photo" style="width: 100%; height: auto;">
-							  
-								  <!-- Card body for text content -->
-								  <div class="card-body">
-									<h5 class="card-title">Uploaded by :  {{ photo.username }}</h5>
-									<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
-									<p class="card-text"><strong>Likes : </strong>{{ photo.likesN }}</p>
-									<p class="card-text"><strong>Comments : </strong>{{ photo.commentsN }}</p>
-								  </div>
-							  
-								  <!-- Card footer for buttons -->
-								  <div class="card-footer">
-									<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-										<button type="button" v-if="photo.isliked==false" class="btn btn-primary btn-custom" @click="likePhoto(photo.username, photo.id)">Like</button>
-										<button type="button" v-if="photo.isliked==true" class="btn btn-primary btn-custom" @click="unlikePhoto(photo.username, photo.id)" style="background-color: #dc3545; color: white;">Unike</button>
-										<button type="button" class="btn btn-secondary btn-custom" @click="commentPhoto(photo.id)">Comments</button>										
+							<h1 class="h2 my-auto"><strong>Your Stream of Photo </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
+							<!-- Comments Log Modal -->
+							<div class="modal fade" id="commentsLogModal" tabindex="-1">
+								<div class="modal-dialog">
+								<div class="modal-content">
+									<div class="modal-header">
+									<h5 class="modal-title">Comments Log</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
 									</div>
-								  </div>
+									<div class="modal-body">
+										<!-- Dynamic comments will be loaded here -->
+										<ul class="list-group custom-margin">
+											<li class="list-group-item" v-for="comment in Comments" :key="comment.id">
+											{{ comment.text }} --- by <strong>{{ comment.username }}</strong>
+											</li>
+										</ul>
+										<p v-if="Comments==null">No comments to display.</p>
+										<div class="btn-group mb-2">
+											<input type="text" placeholder="Write a comment." id="commentText" v-model="commentText" aria-describedby="button-addon" style="width:300px;height:40px;">
+											<button class="btn btn-primary" type="button" id="button-addon" @click="commentPhoto(this.photoUsername, this.photoId)" data-bs-dismiss="modal">Send</button>
+										</div>
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+									</div>
 								</div>
-								<!-- End of Bootstrap card -->
-							  </div>
-							  
+							</div>
+						</div>
+						<div class="col-md-4 custom-margin" v-for="photo in Stream" :key="photo.id">
+							<!-- Bootstrap card -->
+							<div class="card">
+								<!-- Image at the top of the card -->
+								<img class="card-img-top" :src="photo.file" alt="Photo" style="width: 100%; height: auto;">
+							
+								<!-- Card body for text content -->
+								<div class="card-body">
+								<h5 class="card-title">Uploaded by :  {{ photo.username }}</h5>
+								<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
+								<p class="card-text"><strong>Likes : </strong>{{ photo.likesN }}</p>
+								<p class="card-text"><strong>Comments : </strong>{{ photo.commentsN }}</p>
+								</div>
+							
+								<!-- Card footer for buttons -->
+								<div class="card-footer">
+								<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+									<button type="button" v-if="photo.isliked==false" class="btn btn-primary btn-custom" @click="likePhoto(photo.username, photo.id)">Like</button>
+									<button type="button" v-if="photo.isliked==true" class="btn btn-primary btn-custom" @click="unlikePhoto(photo.username, photo.id)" style="background-color: #dc3545; color: white;">Unike</button>
+									<button type="button" class="btn btn-secondary btn-custom" @click="openCommentsLog(photo.username, photo.id)">Comments</button>										
+								</div>
+								</div>
+							</div>
+							<!-- End of Bootstrap card -->
+							</div>
 						</div>
 					</div>
 				</div>
@@ -391,15 +423,7 @@ export default {
     width: 100px;  /* or any other value */
 }
 
-/* Specific styles for input to ensure it matches button height */
-.input-group input[type="text"] {
-    height: 40px; /* Match button height */
-    width: 400px; /* Specific width for the input */
-    padding: 8px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
+
 
 .profile-info {
     /* Optional: Add some styling to your profile info for better presentation */
