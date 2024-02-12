@@ -72,7 +72,7 @@ export default {
 	methods: {
 		async refresh() {
 			this.myOwnProfile()
-			this.getStream()
+			this.getPhotos()
 		},
 		async selectFile() {
 			this.images = this.$refs.file.files[0] // Get the first file
@@ -106,27 +106,6 @@ export default {
 				}
 			}
 		},
-		async getStream() {
-			try {
-				let response = await this.$axios.get("/users/" + this.username + "/homepage", {
-					headers: {
-						Authorization: "Bearer " + localStorage.getItem("requesterID")
-					}
-				})
-				this.Stream = response.data
-				for (let i = 0; i < this.Stream.length; i++) {
-					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
-				}
-			} catch (e) {
-				if (e.response && e.response.status === 400) {
-					this.errormsg = "Form error, please try again";
-				} else if (e.response && e.response.status === 500) {
-					this.errormsg = "An internal error occurred. Please try again later.";
-				} else {
-					this.errormsg = e.toString() + e.response.status.toString();
-				}
-			}
-		},
 		async getPhotos() {
 			try {
 				let response = await this.$axios.get("/users/" + this.username + "/photos/", {
@@ -138,7 +117,6 @@ export default {
 				for (let i = 0; i < this.Stream.length; i++) {
 					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
 				}
-				this.$router.push({ path: '/photos' }) 
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
 					this.errormsg = "Form error, please try again";
@@ -149,33 +127,8 @@ export default {
 				}
 			}
 		},
-		async SearchUser() {
-			if (this.usernameToSearch === this.username) {
-				this.errormsg = "You can't search yourself."
-			} else if (this.searchUserUsername === "") {
-				this.errormsg = "Please insert a valid username."
-			} else {
-				try {
-					let response = await this.$axios.get("users/" + this.usernameToSearch + "/profile", {
-						headers: {
-							Authorization: "Bearer " + localStorage.getItem("requesterID")
-						}
-					})
-					this.profile = response.data
-					this.$router.push({ path: '/users/' + this.usernameToSearch + '/profile' }) // Da cambiare
-				} catch (e) {
-					if (e.response && e.response.status === 400) {
-						this.errormsg = "Form error, please try again.";
-					} else if (e.response && e.response.status === 500) {
-						this.errormsg = "No one found";
-					}
-					else if (e.response && e.response.status === 403) {
-						this.errormsg = "Ops, cant's get the user profile, you've been banned by the user!";
-					} else {
-						this.errormsg = e.toString();
-					}
-				}
-			}
+		async backToHomepage() {
+			this.$router.push({ path: '/homepage' }) 		
 		},
 		async myOwnProfile() {
 			try {
@@ -361,7 +314,7 @@ export default {
 	<div>
 		<div>
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2 my-auto"><strong>Home page - Welcome back to WASA_PHOTO {{ this.username }}</strong></h1>
+				<h1 class="h2 my-auto"><strong>WASA_PHOTO - Uploaded Photos {{ this.username }}</strong></h1>
 				<div class="d-flex align-items-center">
 					<!-- Grouped Buttons and Input for Alignment -->
 					<button type="button" class="btn btn-primary mx-1" @click="refresh" style="background-color: #28a745; color: white;">
@@ -370,8 +323,7 @@ export default {
 					<button type="button" class="btn btn-primary mx-1" @click="doLogout" style="background-color: #dc3545; color: white;">
 						Logout
 					</button>
-					<input type="text" id="usernameToSearch" v-model="usernameToSearch" class="form-control mx-1" placeholder="Search a user in WASA-PHOTO." style="height:40px;">
-					<button class="btn btn-primary mx-1" type="button" @click="SearchUser">Search</button>
+					<button class="btn btn-primary mx-1" type="button" @click="backToHomepage()">HOME</button>
 				</div>
 			</div>
 		</div>
@@ -437,7 +389,7 @@ export default {
 					<!-- Photo Content Column -->
 					<div class="col-md-8">
 						<div class="row">
-							<h1 class="h2 my-auto"><strong style="font-size:40px">Here's the stream of photos </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
+							<h1 class="h2 my-auto"><strong style="font-size:40px">Here's your photos </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
 							<!-- Comments Log Modal -->
 							<div class="modal fade" id="commentsLogModal" tabindex="-1">
 								<div class="modal-dialog">
@@ -476,7 +428,7 @@ export default {
 								<!-- Card body for text content -->
 								<div class="card-body">
 								<h5 class="card-title d-flex align-items-center">
-									Uploaded by :  <button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="seeUserProfile(photo.username)" :style="{ borderColor: 'white' }"><strong style="font-size: 20px;color: black">{{ photo.username }}</strong></button>
+									<strong>Uploaded by yourself</strong>
 								</h5>
 								<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
 								<p class="card-text"><strong>Likes : </strong>{{ photo.likesN }}</p>
@@ -547,4 +499,3 @@ export default {
 	margin-bottom: 30px; /* or any other value */
   }
 </style>
-

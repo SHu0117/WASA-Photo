@@ -57,6 +57,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	profile.N_photo = n_photos
 
+	n_banned, err := rt.db.CountBanned(user.UserToDatabase())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	profile.N_banned = n_banned
+
 	isbanned, err := rt.db.CheckIfBanned(user.ID, requesterID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

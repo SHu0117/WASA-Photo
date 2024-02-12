@@ -1,5 +1,10 @@
 package database
 
+import (
+	"database/sql"
+	"errors"
+)
+
 func (db *appdbimpl) ListBanned(user User) ([]User, error) {
 
 	rows, err := db.c.Query("SELECT u.id, u.username FROM user u, banning b WHERE b.Banner_id = ? and b.Banned_id = u.id", user.ID)
@@ -25,4 +30,15 @@ func (db *appdbimpl) ListBanned(user User) ([]User, error) {
 	}
 
 	return bannedUsers, nil
+}
+
+func (db *appdbimpl) CountBanned(user User) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT count(*) FROM banning b WHERE b.Banner_id = ?", user.ID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return count, ErrDataDoesNotExist
+		}
+	}
+	return count, nil
 }

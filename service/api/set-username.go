@@ -13,12 +13,11 @@ import (
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	pathUsername := ps.ByName("username")
-	err := rt.db.ExistUsername(pathUsername)
+	dbuser, err := rt.db.GetUserID(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	dbuser, err := rt.db.GetUserID(pathUsername)
 	var user User
 	user.UserFromDatabase(dbuser)
 

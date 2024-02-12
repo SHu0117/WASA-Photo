@@ -16,11 +16,6 @@ import (
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	pathUsername := ps.ByName("likeUsername")
-	err := rt.db.ExistUsername(pathUsername)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
@@ -51,17 +46,6 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	like.Photo_id = uint64(photoId)
 
 	pathOwner := ps.ByName("username")
-	err = rt.db.ExistUsername(pathOwner)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = rt.db.ExistUsername(pathUsername)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	dbuser, err = rt.db.GetUserID(pathOwner)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
 		w.WriteHeader(http.StatusNotFound)
@@ -70,7 +54,6 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	user.UserFromDatabase(dbuser)
 	like.Photo_user = user.ID
 
-	// Generate a unique id for the photo
 	dblike, err := rt.db.LikePhoto(like.LikeToDatabase())
 	if err != nil {
 		ctx.Logger.WithError(err).Error("there's an error executing db function call")
@@ -80,19 +63,12 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	like.LikeFromDatabase(dblike)
-	// controllaerrore
-	// _ = json.NewEncoder(w).Encode(PhotoId{IdPhoto: photoIdInt})
 	_ = json.NewEncoder(w).Encode(like)
 }
 
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	pathUsername := ps.ByName("likeUsername")
-	err := rt.db.ExistUsername(pathUsername)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	var user User
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if errors.Is(err, database.ErrDataDoesNotExist) {
@@ -138,8 +114,6 @@ func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps http
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var user User
-	user.UserFromDatabase(dbuser)
 	requesterID := getToken(r.Header.Get("Authorization"))
 	err = rt.db.ExistUID(requesterID)
 	if err != nil {
@@ -159,7 +133,7 @@ func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	beingBanned, err := rt.db.CheckBeingBanned(user.UserToDatabase(), requesterID)
+	beingBanned, err := rt.db.CheckBeingBanned(dbuser, requesterID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")
 		w.WriteHeader(http.StatusInternalServerError)

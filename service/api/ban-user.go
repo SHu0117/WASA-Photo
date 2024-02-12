@@ -12,17 +12,15 @@ import (
 
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	var user User
 	pathUsername := ps.ByName("username")
 	dbuser, err := rt.db.GetUserID(pathUsername)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user.UserFromDatabase(dbuser)
 
 	var banning Banning
-	banning.Banner_id = user.ID
+	banning.Banner_id = dbuser.ID
 
 	pathBanUsername := ps.ByName("banUsername")
 	if err != nil {
@@ -35,8 +33,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	user.UserFromDatabase(dbuser)
-	banning.Banned_id = user.ID
+	banning.Banned_id = dbuser.ID
 
 	ifBanned, err := rt.db.CheckIfBanned(banning.Banned_id, banning.Banner_id)
 	if err != nil {
@@ -85,10 +82,8 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var user User
-	user.UserFromDatabase(dbuser)
 	var banning Banning
-	banning.Banner_id = user.ID
+	banning.Banner_id = dbuser.ID
 
 	pathBanUsername := ps.ByName("banUsername")
 	if err != nil {
@@ -101,8 +96,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	user.UserFromDatabase(dbuser)
-	banning.Banned_id = user.ID
+	banning.Banned_id = dbuser.ID
 
 	ifBanned, err := rt.db.CheckIfBanned(banning.Banned_id, banning.Banner_id)
 	if err != nil {
@@ -137,7 +131,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (rt *_router) listBanned(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {

@@ -440,20 +440,6 @@ paths:
       - $ref: "#/components/parameters/username"
       - $ref: "#/components/parameters/pid"
     
-    get:
-      security:
-        - bearerAuth : []
-      tags:
-        - photo
-      operationId: getPhoto
-      summary: Get photo details
-      description: Retrieve details of a specific photo
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Photo" }
     
     delete:
       security:

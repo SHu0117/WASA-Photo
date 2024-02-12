@@ -118,7 +118,7 @@ export default {
 						}
 					})
 					this.profile = response.data
-					this.$router.push({ path: '/users/' + this.searchUserUsername + '/profile' }) // Da cambiare
+					this.$router.push({ path: '/users/' + this.searchUserUsername + '/profile' }) 
 				} catch (e) {
 					if (e.response && e.response.status === 400) {
 						this.errormsg = "Form error, please try again.";
@@ -130,6 +130,9 @@ export default {
 					}
 				}
 			}
+		},
+        async backToHomepage() {
+			this.$router.push({ path: '/homepage' }) 		
 		},
 		async commentPhoto(username, Photo_id) {
 			if (this.commentText === "") {
@@ -317,7 +320,7 @@ export default {
 	<div>
 		<div>
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2 my-auto">Home page - Welcome back to WASA_PHOTO {{ this.username }}</h1>
+				<h1 class="h2 my-auto"><strong>WASA_PHOTO - Search Result</strong></h1>
 				<div class="d-flex align-items-center">
 					<!-- Grouped Buttons and Input for Alignment -->
 					<button type="button" class="btn btn-primary mx-1" @click="refresh" style="background-color: #28a745; color: white;">
@@ -325,9 +328,8 @@ export default {
 					</button>
 					<button type="button" class="btn btn-primary mx-1" @click="doLogout" style="background-color: #dc3545; color: white;">
 						Logout
-					</button>
-					<input type="text" id="usernameToSearch" v-model="usernameToSearch" class="form-control mx-1" placeholder="Search a user in WASA-PHOTO." style="height:40px;">
-					<button class="btn btn-primary mx-1" type="button" @click="SearchUser">Search</button>
+					</button>					
+					<button class="btn btn-primary mx-1" type="button" @click="backToHomepage()">HOME</button>
 				</div>
 			</div>
 		</div>
@@ -338,25 +340,23 @@ export default {
 					<!-- Profile Information Column -->
 					<div class="col-md-4">
 						<!-- Existing Content Column -->
-						<div class="profile-info mt-3">
+						<div class="profile-infobox mt-3">
 							<h2>{{ this.profile.username }}'s Profile</h2>
 							<div class="info-row">
-								<p><strong>Username:</strong><span><strong>{{ this.profile.username }}</strong></span></p>
+								<p style="font-size:30px"><strong>Username:</strong><span><strong>{{ this.profile.username }}</strong></span></p>
 							</div>
 							<div class="info-row">
-								<p><strong>Followers:</strong><span><strong>{{ this.profile.followers }}</strong></span></p>
+								<p style="font-size:30px"><strong>Followers:</strong><span><strong>{{ this.profile.followers }}</strong></span></p>
 							</div>
 							<div class="info-row">
-								<p><strong>Following:</strong><span><strong>{{ this.profile.followed }}</strong></span></p>
+								<p style="font-size:30px"><strong>Following:</strong><span><strong>{{ this.profile.followed }}</strong></span></p>
 							</div>
 							<div class="info-row">
-								<p><strong>Photos:</strong><span><strong>{{ this.profile.photos }}</strong></span></p>
+								<p style="font-size:30px"><strong>Photos:</strong><span><strong>{{ this.profile.photos }}</strong></span></p>
 							</div>
                             <div class="info-row">
                                 <button type="button" v-if="profile.isBanned==true" class="btn btn-primary btn-custom" @click="unbanUser()" style="background-color: #28a745; color: white;">UnBAN</button>
 							    <button type="button" v-if="profile.isBanned==false" class="btn btn-primary btn-custom" @click="banUser()" style="background-color: #dc3545; color: white;">BAN</button>									
-                            </div>
-                            <div class="info-row">
                                 <button type="button" v-if="profile.isFollowed==true" class="btn btn-primary btn-custom" @click="unfollowUser(this.username)" style="background-color: #dc3545; color: white;">UnFollow</button>
 							    <button type="button" v-if="profile.isFollowed==false" class="btn btn-primary btn-custom" @click="followUser()" style="background-color: #28a745; color: white;">Follow</button>
                             </div>
@@ -385,12 +385,12 @@ export default {
                                                 </li>
                                             </ul>
                                             <p v-if="Comments==null">No comments to display.</p>
+                                        </div>
+                                        <div class="modal-footer">
                                             <div class="btn-group mb-2">
                                                 <input type="text" placeholder="Write a comment." id="commentText" v-model="commentText" aria-describedby="button-addon" style="width:300px;height:40px;">
                                                 <button class="btn btn-primary" type="button" id="button-addon" @click="commentPhoto(this.photoUsername, this.photoId)" data-bs-dismiss="modal">Send</button>
                                             </div>
-                                        </div>
-                                        <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                         </div>
 								    </div>
@@ -398,7 +398,7 @@ export default {
                             </div>
                             
                             
-                            <div class="col-md-4 custom-margin" v-for="photo in Stream" :key="photo.id">
+                            <div class="col-md-4 custom-margin" v-for="photo in this.Stream" :key="photo.id">
 								<!-- Bootstrap card -->
 								<div class="card">
 								  <!-- Image at the top of the card -->
@@ -406,7 +406,9 @@ export default {
 							  
 								  <!-- Card body for text content -->
 								  <div class="card-body">
-									<h5 class="card-title">Uploaded by :  {{ photo.username }}</h5>
+									<h5 class="card-title">
+                                        Uploaded by :  <button type="button" class="btn btn-outline-primary" @click="seeUserProfile(photo.username)"><strong>{{ photo.username }}</strong></button>
+                                    </h5>
 									<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
 									<p class="card-text"><strong>Likes : </strong>{{ photo.likesN }}</p>
 									<p class="card-text"><strong>Comments : </strong>{{ photo.commentsN }}</p>
@@ -446,39 +448,31 @@ export default {
 }
 
 .btn-custom {
-    width: 100px;  /* or any other value */
+    width: 100px;  
 }
 
-/* Specific styles for input to ensure it matches button height */
-.input-group input[type="text"] {
-    height: 40px; /* Match button height */
-    width: 400px; /* Specific width for the input */
-    padding: 8px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
 
-.profile-info {
-    /* Optional: Add some styling to your profile info for better presentation */
+
+.profile-infobox {
     padding: 8px;
-	width: 200px;
+	width: 340px;
     border-radius: 4px;
-    border: 1px solid #ddd; /* Just an example, adjust as needed */
+    border: 1px solid #ddd; 
     background-color: #f8f9fa; /* Light gray background */
 }
 
-.profile-info .info-row p {
+.profile-infobox .info-row p {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.5rem;
+    margin-right: 20px;
 }
 
-.profile-info .info-row p strong {
+.profile-infobox .info-row p strong {
     margin-right: 0.5rem;
 }
 
-.profile-info .info-row p span {
+.profile-infobox .info-row p span {
     margin-left: auto;
 }
 
@@ -487,5 +481,3 @@ export default {
   }
 </style>
 
-
-  

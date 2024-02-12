@@ -40,8 +40,8 @@ var ErrDataDoesNotExist = errors.New("data does not exist")
 var ErrUserHasBeenBanned = errors.New("you are banned by the user, can't get any information")
 
 type User struct {
-	ID       uint64
-	Username string
+	ID       uint64 `json:"id"`
+	Username string `json:"username"`
 }
 
 type Photo struct {
@@ -93,7 +93,6 @@ type AppDatabase interface {
 	ExistUsername(username string) error
 	ExistUID(id uint64) error
 	ExistPhoto(id uint64) error
-	ListFollowers(u User) ([]User, error)
 	ListFollowed(u User) ([]User, error)
 	ListBanned(u User) ([]User, error)
 	CheckBeingBanned(user User, requesterID uint64) (bool, error)
@@ -112,6 +111,7 @@ type AppDatabase interface {
 	CountFollowed(user User) (int, error)
 	CountPhotos(u User) (int, error)
 	CountFollower(user User) (int, error)
+	CountBanned(user User) (int, error)
 	CheckIfFollowed(targetID uint64, requesterID uint64) (bool, error)
 	CheckIfBanned(targetID uint64, requesterID uint64) (bool, error)
 	CheckIfLiked(targetID uint64, requesterID uint64) (bool, error)
