@@ -3,11 +3,8 @@ export default {
 	data: function() {
 		return {
 			errormsg: null,
-			successmsg: null,
 			username: localStorage.getItem('username'),
 			requesterID: localStorage.getItem('requesterID'),
-			loading: false,
-			some_data: null,
 			images: null,
 			clear: null,
 			Comments: {
@@ -38,7 +35,7 @@ export default {
 				],
 			},
 			usernameToSearch: "",
-            photoUsernmae: "",
+            photoUsername: "",
             photoId: 0,
 			like: {
 				ID: 0,
@@ -431,7 +428,9 @@ export default {
                                             <ul class="list-group custom-margin">
                                                 <li class="list-group-item" v-for="comment in Comments" :key="comment.id">
                                                     {{ comment.text }} --- by <strong style="margin-right:5px;">{{ comment.username }}</strong>
-                                                    <button v-if="comment.username==this.username" class="btn-primary" type="button" id="button-addon" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal" style="background-color: #dc3545; color: white;">Delete</button>
+                                                    <button v-if="comment.username==this.username" type="button" class="delete-button" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal">
+														<div class="smalltrash icon"></div>
+													</button>
                                                 </li>
                                             </ul>
                                             <p v-if="Comments==null">No comments to display.</p>
@@ -570,6 +569,39 @@ color: red; /* Keeps the heart red when liked */
 
 .heart-button:hover {
 	color: #ff6666; /* Lighter red on hover, adjust as needed */
+}
+
+.smalltrash.icon{
+    color: #000;
+    position: relative; /* Use 'relative' so that ':after' is positioned relative to this */
+    display: inline-block;
+    width: 12px;
+    height: 14px;
+    border-left: solid 1px currentColor;
+    border-right: solid 1px currentColor;
+    border-bottom: solid 1px currentColor;
+    border-radius: 0 0 2px 2px;
+}
+
+.smalltrash.icon:after{
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: -3px;
+    width: 12px;
+    height: 2px;
+    background-color: currentColor;
+    border-radius: 2px 2px 0px 0px;
+}
+
+.delete-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
 }
 </style>
 

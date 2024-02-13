@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import PhotosView from '../views/PhotosView.vue'
+import PageNotFoundView from '../views/PageNotFound.vue'
 
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -11,7 +12,8 @@ const router = createRouter({
         {path: '/login',  component: LoginView},
         {path: '/homepage',   component: HomeView},
 		{path: '/users/:username/profile', component: ProfileView},
-		{path: '/photos',   component: PhotosView}
+		{path: '/photos',   component: PhotosView},
+		{path: '/:catchAll(.*)', component: PageNotFoundView}		
 	]
 })
 

@@ -44,71 +44,91 @@ export default {
 
 
 <template>
-    <div class="login-container">
-        <h1 class="title">WASA-PHOTO</h1>
-        <div class="input-group">
-            <label for="username" class="form-label">Please enter your username to login:</label>
-            <input type="text" id="username" v-model="username" placeholder="Enter your username">
-            <button @click="doLogin">Login</button>
+    <div class="logInBox">
+        <div class="info">
+          <h4>WELCOME!</h4>
+        </div>
+        <div class="inputArea">
+          <div class="wordArea">
+            <input class="userName" id="username" v-model="username" placeholder="Enter your username" style="font-size:25px;">
+          </div>
+          <div class="buttonArea">
+            <input type="button" class="logButton" value="Log In" @click="doLogin">
+          </div>
         </div>
         <p v-if="errormsg" class="error-msg">{{ errormsg }}</p>
     </div>
+
 </template>
 
 <style>
-.login-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    font-family: 'Arial', sans-serif;
+.logInBox{
+    width:500px;
+    height:200px;
+    background:#abc;
+    position:fixed;
+    top:50%;
+    left:50%;
+    margin-top:-150px;
+    margin-left:-250px;
+    opacity:0.8;
 }
 
-.title {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 6rem; /* Larger font size */
-    font-family: 'Helvetica Neue', sans-serif; /* Different font */
-    text-align: center; /* Ensure title is centered at the top */
+.info{
+width:100%;
+height:30%;
+background:#123;
+text-align:center;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column; /* Align label and input vertically */
-    align-items: center;
-    margin-bottom: 15px;
+h4{
+color:white;
+margin:auto;
+position:relative;
+top:5px;
+font-size:45px;
 }
 
-.input-group label {
-    margin-bottom: 10px; /* Adjust spacing */
-    font-size: 1.2rem; /* Larger label text */
-    color: #555;
-    text-align: center; /* Center the label text */
+.inputArea{
+width:60%;
+height:70%;
+margin:auto;
 }
 
-.input-group input[type="text"] {
-    width: 300px;
-    padding: 8px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px; /* Adjust spacing */
+.wordArea{
+width:80%;
+margin:auto;
 }
 
-.input-group button {
-    width: 100px;
-    padding: 8px 12px;
-    font-size: 1rem;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.userName{
+width:100%;
+height:40px;
+margin-top:15px;
 }
 
-.input-group button:hover {
-    background-color: #218838;
+.buttonArea{
+position:relative;
+top:10%;
+width:40%;
+margin:auto;
+}
+
+.logButton{
+width:100%;
+height:40px;
+border-radius:10px;
+outline:none;
+border:1px solid #abc;
+}
+
+.click:hover{
+background:#bbb;
+border:#bbb;
+}
+
+.click:active{
+margin-left:1px;
+margin-top:1px;
 }
 
 .error-msg {
