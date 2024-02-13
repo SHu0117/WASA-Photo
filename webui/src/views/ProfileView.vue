@@ -98,7 +98,7 @@ export default {
 						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
 				})
-				this.Stream = response.data
+				this.Stream = response.data ?? []
 				for (let i = 0; i < this.Stream.length; i++) {
 					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
 				}
@@ -568,14 +568,8 @@ color: #ccc; /* Default color for unliked state */
 color: red; /* Keeps the heart red when liked */
 }
 
-/* Optional: Different color on hover for visual feedback */
 .heart-button:hover {
-color: #ff6666; /* Lighter red on hover, adjust as needed */
-}
-
-/* Ensure the heart remains red when liked, even on hover */
-.heart-button.liked:hover {
-color: red; /* Keeps the heart red when liked, even on hover */
+	color: #ff6666; /* Lighter red on hover, adjust as needed */
 }
 </style>
 

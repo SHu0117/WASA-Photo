@@ -111,7 +111,7 @@ export default {
 						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
 				})
-				this.Stream = response.data
+				this.Stream = response.data ?? []
 				for (let i = 0; i < this.Stream.length; i++) {
 					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
 				}
@@ -579,14 +579,8 @@ export default {
 color: red; /* Keeps the heart red when liked */
 }
 
-/* Optional: Different color on hover for visual feedback */
 .heart-button:hover {
-color: #ff6666; /* Lighter red on hover, adjust as needed */
-}
-
-/* Ensure the heart remains red when liked, even on hover */
-.heart-button.liked:hover {
-color: red; /* Keeps the heart red when liked, even on hover */
+	color: #ff6666; /* Lighter red on hover, adjust as needed */
 }
 
 .trash.icon{
@@ -621,4 +615,12 @@ color: red; /* Keeps the heart red when liked, even on hover */
     justify-content: center;
     padding: 5px;
 }
+
+.heart-button, .delete-button {
+	width: 40px;  /* Adjust to your preference */
+	height: 40px;  /* Adjust to your preference */
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+  }
 </style>

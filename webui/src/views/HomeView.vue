@@ -144,7 +144,7 @@ export default {
 						Authorization: "Bearer " + localStorage.getItem("requesterID")
 					}
 				})
-				this.Stream = response.data
+				this.Stream = response.data ?? []
 				for (let i = 0; i < this.Stream.length; i++) {
 					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
 				}
@@ -160,15 +160,6 @@ export default {
 		},
 		async getPhotos() {
 			try {
-				let response = await this.$axios.get("/users/" + this.username + "/photos/", {
-					headers: {
-						Authorization: "Bearer " + localStorage.getItem("requesterID")
-					}
-				})
-				this.Stream = response.data
-				for (let i = 0; i < this.Stream.length; i++) {
-					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
-				}
 				this.$router.push({ path: '/photos' }) 
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
@@ -659,26 +650,18 @@ export default {
 
 .heart-button {
 	background: transparent; /* Ensures no background color */
-	border: none;
 	font-size: 40px; /* Adjust size as needed */
 	cursor: pointer;
 	color: #ccc; /* Default color for unliked state */
-  }
-  
-  /* Color change for liked state */
-  .heart-button[liked=true], .heart-button.liked {
-	color: red; /* Keeps the heart red when liked */
-  }
-  
-  /* Optional: Different color on hover for visual feedback */
-  .heart-button:hover {
+}
+
+/* Color change for liked state */
+.heart-button[liked=true], .heart-button.liked {
+color: red; /* Keeps the heart red when liked */
+}
+
+.heart-button:hover {
 	color: #ff6666; /* Lighter red on hover, adjust as needed */
-  }
-  
-  /* Ensure the heart remains red when liked, even on hover */
-  .heart-button.liked:hover {
-	color: red; /* Keeps the heart red when liked, even on hover */
-  }
-  
+}
 </style>
 
