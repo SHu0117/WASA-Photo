@@ -5,35 +5,6 @@ import (
 	"errors"
 )
 
-/*
-*
-// upload photo and returns photoId
-
-	func (db *appdbimpl) GetPhoto(pid uint64) (Photo, error) {
-		var p Photo
-		err := db.c.QueryRow("SELECT id, user_id, file, upload_time FROM photos WHERE id = ? ", pid).Scan(&p.ID, &p.User_id, &p.File, &p.Upload_time)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return p, ErrDataDoesNotExist
-			}
-		}
-		err = db.c.QueryRow("SELECT count(*) FROM photos p, like l WHERE id = ? and l.photo_id = ? ", pid, pid).Scan(&p.N_likes)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return p, ErrDataDoesNotExist
-			}
-		}
-		err = db.c.QueryRow("SELECT count(*) FROM photos p, commet c WHERE id = ? and c.photo_id = ? ", pid, pid).Scan(&p.N_comments)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return p, ErrDataDoesNotExist
-			}
-		}
-		return p, nil
-	}
-
-*
-*/
 func (db *appdbimpl) GetUserPhotos(u User, requesterID uint64) ([]Photo, error) {
 	var list []Photo
 	rows, err := db.c.Query("SELECT p.id, p.user_id, u.username, p.file, p.upload_time FROM photos p, user u WHERE u.id = ? AND p.user_id = u.id ", u.ID)

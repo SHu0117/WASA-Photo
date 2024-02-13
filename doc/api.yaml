@@ -26,12 +26,12 @@ components:
         type: string
         pattern: '^.*?$'
         example: SiweiHu
-        minLength: 5
+        minLength: 3
         maxLength: 16
       name: username
       in: path
       required: true
-      description: identifier for users
+      description: username for users
     
     followUsername:
       schema:
@@ -39,12 +39,12 @@ components:
         type: string
         pattern: '^.*?$'
         example: SiweiHu
-        minLength: 5
+        minLength: 3
         maxLength: 16
       name: followUsername
       in: path
       required: true
-      description: identifier for users to follow
+      description: username for users to follow
       
     
     banUsername:
@@ -53,12 +53,12 @@ components:
         type: string
         pattern: '^.*?$'
         example: SiweiHu
-        minLength: 5
+        minLength: 3
         maxLength: 16
       name: banUsername
       in: path
       required: true
-      description: identifier for users to ban
+      description: username for users to ban
     
     likeUsername:
       schema:
@@ -66,7 +66,7 @@ components:
         type: string
         pattern: '^.*?$'
         example: SiweiHu
-        minLength: 5
+        minLength: 3
         maxLength: 16
       name: likeUsername
       in: path
@@ -99,8 +99,17 @@ components:
       required: true
        
     
-    
-    
+  responses: 
+    UnauthorizedStatus:
+      description: requester is not authorized or access token is not valid or expired
+    BadRequestError:
+      description: The request was not compliant with the documentation (eg. missing fields, etc).
+    InternalServerError:
+      description: The server encountered an internal error. Further info in server logs.  
+    NotFoundError:
+      description: the requesting data is not found
+    StatusForbidden:
+      description: not allowed to visit
     
     
   schemas:
@@ -116,6 +125,7 @@ components:
           format: int64
           example: 999
         username:
+          description: username for users
           type: string
           example: SiweiHu
           pattern: '^.*?$'
@@ -162,9 +172,15 @@ components:
         username:
           description: the username of the user that commented
           type: string
+          pattern: '^.*?$'
+          minLength: 3
+          maxLength: 16
         text:
           description: the text of the comment
           type: string
+          pattern: '^.*?$'
+          minLength: 0
+          maxLength: 999
     
     Like:
       title: Like
@@ -192,10 +208,11 @@ components:
       type: object
       properties:
         username:
+          description: username for users
           type: string
           pattern: '^.*?$'
           example: SiweiHu
-          minLength: 5
+          minLength: 3
           maxLength: 16
         n_photos:
           description: number of photos published by the user
@@ -264,6 +281,7 @@ paths:
         content:
           application/json:
             schema: 
+              description: username for the user to be logged in or signed up
               type: string
               example: SiweiHu
               pattern: '^.*?$'
@@ -273,12 +291,15 @@ paths:
         required: true
       responses:
         '201':
-          description: User log-in action successful
+          description: User signed-in action successful
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-                    
+        '200':
+          description: user log-in seccessfully
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }            
       
                 
   
@@ -301,10 +322,15 @@ paths:
           content:
             application/json:
               schema:
+                description: an array of photos retrieved
                 type: array
                 items: { $ref: "#/components/schemas/Photo"}
                 minItems: 0
                 maxItems: 99999
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
               
   
   /users/{username}/profile:
@@ -327,12 +353,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Profile"}
-        "400": 
-          description: The request was not compliant with the documentation (eg. missing fields, etc).
-        "404": 
-          description: User not found 
-        "500": 
-          description: The server encountered an internal error. Further info in server logs.
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
   
   /users/{username}:
     parameters:
@@ -345,10 +368,13 @@ paths:
         - user
       operationId: setMyUserName
       summary: set the username specified by the userin the request
+      description: |
+        receive in input a valid string and check first if the name already exists then set the new username
       requestBody:
         content:
           application/json:
             schema: 
+                description: the new username to be set up
                 type: string
                 example: SiweiHu
                 pattern: '^.*?$'
@@ -360,15 +386,16 @@ paths:
           content:
             application/json:
               schema: 
+                description: new username
                 type: string
                 example: SiweiHu
                 pattern: '^.*?$'
                 minLength: 3
                 maxLength: 16
-        "400": 
-          description: The request was not compliant with the documentation (eg. missing fields, etc).
-        "500": 
-          description: The server encountered an internal error. Further info in server logs.
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
         
   
   
@@ -394,10 +421,16 @@ paths:
           content:
             application/json:
               schema:
+                description: array of photos retrieved
                 type: array
                 items: { $ref: "#/components/schemas/Photo"}
                 minItems: 0
                 maxItems: 99999
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
       
       
       
@@ -420,6 +453,7 @@ paths:
               type: object
               properties:
                 file:
+                  description: file of image
                   type: string
                   format: binary
                   minLength: 0
@@ -428,10 +462,12 @@ paths:
         '201':
           description: new photo uloaded successfully
           content:
-            image/png:
-              schema:
-                type: string
-                format: binary
+            application/json: 
+              schema: { $ref: "#/components/schemas/Photo"}
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
     
           
   
@@ -453,12 +489,10 @@ paths:
       responses:
         "204": 
           description: Photo deleted successfully 
-        "400": 
-          description: The request was not compliant with the documentation (eg. missing fields, etc).
-        "404": 
-          description: photo not found 
-        "500": 
-          description: The server encountered an internal error. Further info in server logs.
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
 
   
   /users/{username}/photos/{pid}/likes:
@@ -481,6 +515,7 @@ paths:
           content:
             application/json:
               schema:
+                description: array of users that liked the corrisponding photo
                 type: array
                 items: { $ref: "#/components/schemas/Like"}
                 minItems: 0
@@ -507,6 +542,10 @@ paths:
           content:
             application/json:
               schema: { $ref : "#/components/schemas/User"}
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
               
               
     delete:
@@ -520,6 +559,10 @@ paths:
       responses:
         '204':
           description:  operation successfull
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
           
   /users/{username}/following/:
     parameters: 
@@ -540,11 +583,17 @@ paths:
           content:
             application/json:
               schema:
+                description: array og users that the user is following
                 type: array
                 items: { $ref: "#/components/schemas/User"}
                 minItems: 0
                 maxItems: 99999
-                
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
+        
   /users/{username}/following/{followUsername}: 
     parameters:
       - $ref: "#/components/parameters/username"
@@ -575,6 +624,10 @@ paths:
       responses:
         '204':
           description:  operation successfull
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
           
 
           
@@ -618,10 +671,16 @@ paths:
           content:
             application/json:
               schema:
+                description: array of comments of the corrisponding photo
                 type: array
                 items: { $ref: "#/components/schemas/Comment"}
                 minItems: 0
                 maxItems: 99999
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
                 
   
   /users/{username}/photos/{pid}/comments/{cid}:
@@ -663,10 +722,16 @@ paths:
           content:
             application/json:
               schema:
+                description: array of users that are banned by the user
                 type: array
                 items: { $ref: "#/components/schemas/User"}
                 minItems: 0
                 maxItems: 99999
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
                 
     
   /users/{username}/banned/{banUsername}:
@@ -700,6 +765,10 @@ paths:
       responses:
         '204':
           description:  operation successfull
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
 
               
               
