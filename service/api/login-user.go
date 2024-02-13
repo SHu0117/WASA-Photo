@@ -49,7 +49,12 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		user.UserFromDatabase(dbuser)
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(user)
+		err = json.NewEncoder(w).Encode(user)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Error while encoding data")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 }

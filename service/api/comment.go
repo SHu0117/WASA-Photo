@@ -81,9 +81,12 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	comment.CommentFromDatabase(dbcomment)
-	// controllaerrore
-	// _ = json.NewEncoder(w).Encode(PhotoId{IdPhoto: photoIdInt})
-	_ = json.NewEncoder(w).Encode(comment)
+	err = json.NewEncoder(w).Encode(comment)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -168,5 +171,10 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	// set the header and return output
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(list)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

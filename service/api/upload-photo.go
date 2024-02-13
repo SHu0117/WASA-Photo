@@ -45,12 +45,15 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Parse the multipart form
-	r.ParseMultipartForm(10 << 20) // Limit upload size
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	// Retrieve the file from posted form-data
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		// Handle error
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
@@ -83,9 +86,12 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	photo.PhotoFromDatabase(dbPhoto)
 	photo.User_username = user.Username
 	photo.IsLiked = false
-	// controllaerrore
-	// _ = json.NewEncoder(w).Encode(PhotoId{IdPhoto: photoIdInt})
-	_ = json.NewEncoder(w).Encode(photo)
+	err = json.NewEncoder(w).Encode(photo)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -132,44 +138,6 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.WriteHeader(http.StatusNoContent)
 }
 
-/*
-*
-func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-
-		requesterID := getToken(r.Header.Get("Authorization"))
-		err := rt.db.ExistUID(requesterID)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		photoId, err1 := strconv.Atoi(ps.ByName("pid"))
-		if err1 != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		err = rt.db.ExistPhoto(uint64(photoId))
-		if errors.Is(err, database.ErrDataDoesNotExist) {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		var photo Photo
-		dbphoto, err := rt.db.GetPhoto(uint64(photoId))
-		if err != nil {
-			ctx.Logger.WithError(err).Error("can't get the corrisponding photo ")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		photo.PhotoFromDatabase(dbphoto)
-		w.Header().Set("Content-Type", "image/*")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(photo)
-	}
-
-*
-*/
 func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	pathUsername := ps.ByName("username")
@@ -211,7 +179,12 @@ func (rt *_router) getUserPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	list = dblist
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(list)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -246,5 +219,10 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	list = dblist
 	w.Header().Set("Content-Type", "image/*")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(list)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

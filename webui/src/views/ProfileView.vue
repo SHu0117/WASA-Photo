@@ -9,7 +9,6 @@ export default {
 			loading: false,
 			some_data: null,
 			images: null,
-			image: null,
 			clear: null,
 			Comments: {
 				comment: [
@@ -56,6 +55,14 @@ export default {
 				photos: 0,
 				IsFollowed: null,
 				IsBanned: null,
+			},
+            users: {
+				user: [
+					{
+						id: 0,
+						username: "",
+					}
+				],
 			},
 		
 		}
@@ -158,6 +165,28 @@ export default {
 				}
 			}
 		},
+        async uncommentPhoto(username, Photo_id, Comment_id) {
+			
+			try {
+				let response = await this.$axios.delete("/users/" + username + "/photos/" + Photo_id + "/comments/" + Comment_id, {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.clear = response.data
+				this.refresh()
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+			
+		},
 		async openCommentsLog(username, Photo_id) {
 			try {
 				let response = await this.$axios.get("/users/" + username + "/photos/" + Photo_id + "/comments/", {
@@ -169,6 +198,26 @@ export default {
 				this.photoUsername = username;
 				this.photoId = Photo_id;
 				var myModal = new bootstrap.Modal(document.getElementById('commentsLogModal'));
+    			myModal.show();
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+        async openLikesLog(username, Photo_id) {
+			try {
+				let response = await this.$axios.get("/users/" + username + "/photos/" + Photo_id + "/likes", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.users = response.data;
+				var myModal = new bootstrap.Modal(document.getElementById('usersLogModal'));
     			myModal.show();
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
@@ -374,14 +423,15 @@ export default {
                                         <div class="modal-header">
                                         <h5 class="modal-title">Comments Log</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
+                                            <span aria-hidden="true"></span>
                                         </button>
                                         </div>
                                         <div class="modal-body">
                                             <!-- Dynamic comments will be loaded here -->
                                             <ul class="list-group custom-margin">
                                                 <li class="list-group-item" v-for="comment in Comments" :key="comment.id">
-                                                {{ comment.text }} --- by <strong>{{ comment.username }}</strong>
+                                                    {{ comment.text }} --- by <strong style="margin-right:5px;">{{ comment.username }}</strong>
+                                                    <button v-if="comment.username==this.username" class="btn-primary" type="button" id="button-addon" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal" style="background-color: #dc3545; color: white;">Delete</button>
                                                 </li>
                                             </ul>
                                             <p v-if="Comments==null">No comments to display.</p>
@@ -396,29 +446,54 @@ export default {
 								    </div>
 							    </div>
                             </div>
+
+                            <div class="modal fade" id="usersLogModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title">Here's the list of users </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                                            <span aria-hidden="true"></span>
+                                        </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <ul class="list-group custom-margin">
+                                                <li class="list-group-item" v-for="user in this.users" :key="user.id">
+                                                    <strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" data-bs-dismiss="modal" @click="seeUserProfile(user.username)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ user.username }}</strong></button></strong>
+                                                </li>
+                                            </ul>
+                                            <p v-if="this.users==null" class="align-items-center justify-content-center"><strong style="font-size:20px">No users found</strong></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
                             
                             <div class="col-md-4 custom-margin" v-for="photo in this.Stream" :key="photo.id">
 								<!-- Bootstrap card -->
 								<div class="card">
 								  <!-- Image at the top of the card -->
-								  <img class="card-img-top" :src="photo.file" alt="Photo" style="width: 100%; height: auto;">
+								  <img class="card-img-top" :src="photo.file" alt="Photo" style="width: 100%; height: 250px; object-fit: contain;background-color: black">
 							  
 								  <!-- Card body for text content -->
 								  <div class="card-body">
-									<h5 class="card-title">
-                                        Uploaded by :  <button type="button" class="btn btn-outline-primary" @click="seeUserProfile(photo.username)"><strong>{{ photo.username }}</strong></button>
+									<h5 class="card-title d-flex align-items-center">
+                                        Uploaded by :  <button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="seeUserProfile(photo.username)" :style="{ borderColor: 'white' }"><strong style="font-size: 20px;color: black">{{ photo.username }}</strong></button>
                                     </h5>
 									<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
-									<p class="card-text"><strong>Likes : </strong>{{ photo.likesN }}</p>
+									<p class="card-text d-flex align-items-center"><strong>Likes : </strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openLikesLog(photo.username, photo.id)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ photo.likesN }}</strong></button></p>
 									<p class="card-text"><strong>Comments : </strong>{{ photo.commentsN }}</p>
 								  </div>
 							  
 								  <!-- Card footer for buttons -->
 								  <div class="card-footer">
 									<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-										<button type="button" v-if="photo.isliked==false" class="btn btn-primary btn-custom" @click="likePhoto(photo.username, photo.id)">Like</button>
-										<button type="button" v-if="photo.isliked==true" class="btn btn-primary btn-custom" @click="unlikePhoto(photo.username, photo.id)" style="background-color: #dc3545; color: white;">Unike</button>
+										<button type="button" class="heart-button" :class="{ 'liked': photo.isliked }" @click="photo.isliked ? unlikePhoto(photo.username, photo.id) : likePhoto(photo.username, photo.id)">
+                                            {{ photo.isliked ? '♥' : '♡' }}
+                                        </button>
 										<button type="button" class="btn btn-secondary btn-custom" @click="openCommentsLog(photo.username, photo.id)">Comments</button>										
 									</div>
 								  </div>
@@ -479,5 +554,28 @@ export default {
 .custom-margin {
 	margin-bottom: 30px; /* or any other value */
   }
+
+.heart-button {
+background: transparent; /* Ensures no background color */
+border: none;
+font-size: 40px; /* Adjust size as needed */
+cursor: pointer;
+color: #ccc; /* Default color for unliked state */
+}
+
+/* Color change for liked state */
+.heart-button[liked=true], .heart-button.liked {
+color: red; /* Keeps the heart red when liked */
+}
+
+/* Optional: Different color on hover for visual feedback */
+.heart-button:hover {
+color: #ff6666; /* Lighter red on hover, adjust as needed */
+}
+
+/* Ensure the heart remains red when liked, even on hover */
+.heart-button.liked:hover {
+color: red; /* Keeps the heart red when liked, even on hover */
+}
 </style>
 

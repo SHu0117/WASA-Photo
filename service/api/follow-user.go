@@ -71,7 +71,12 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	// Send the output to the user.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(following)
+	err = json.NewEncoder(w).Encode(following)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -169,5 +174,10 @@ func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httpr
 	// set the header and return output
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(list)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

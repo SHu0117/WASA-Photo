@@ -63,7 +63,12 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	like.LikeFromDatabase(dblike)
-	_ = json.NewEncoder(w).Encode(like)
+	err = json.NewEncoder(w).Encode(like)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -154,5 +159,10 @@ func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps http
 	// set the header and return output
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(list)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

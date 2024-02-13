@@ -78,6 +78,11 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	profile.Is_followed = isfollowed
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(profile)
+	err = json.NewEncoder(w).Encode(profile)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 }
