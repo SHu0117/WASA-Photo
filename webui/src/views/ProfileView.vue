@@ -466,7 +466,7 @@ export default {
 												<div class="d-flex justify-content-start rounded-3 p-2 mb-2" style="background-color: #efefef;">
 													<div class="px-3">
 														<p class="text-muted mb-1" style="font-weight:bold;">Post</p>
-														<button class="number-button" @click="getPhotos()">{{ this.profile.photos }}</button>
+														<p class="mb-0" style="font-weight:bold;">{{ this.profile.photos }}</p>
 													</div>
 													<div class="px-3">
 														<p class="text-muted mb-1" style="font-weight:bold;">Followers</p>

@@ -652,30 +652,6 @@ export default {
     width: 100px;  
 }
 
-
-
-.profile-infobox {
-    padding: 8px;
-	width: 400px;
-    border-radius: 4px;
-    border: 1px solid #ddd; 
-    background-color: #f8f9fa; /* Light gray background */
-}
-
-.profile-infobox .info-row p {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.profile-infobox .info-row p strong {
-    margin-right: 0.5rem;
-}
-
-.profile-infobox .info-row p span {
-    margin-left: auto;
-}
-
 .custom-margin {
 	margin-bottom: 30px; 
 }

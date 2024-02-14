@@ -391,7 +391,7 @@ export default {
 	<div>
 		<div>
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2 my-auto"><strong>WASA-PHOTO - Uploaded Photos {{ this.username }}</strong></h1>
+				<h1 class="h2 my-auto"><strong>WASA-PHOTO - Uploaded Photos</strong></h1>
 				<div class="d-flex align-items-center">
 					<!-- Grouped Buttons and Input for Alignment -->
 					<i class="fas fa-sync icon-spacing" @click="refresh()" aria-label="Refresh"></i>
