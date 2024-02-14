@@ -161,14 +161,14 @@ components:
         file: 
             description: Base64 encoded string of file
             type: string
-            format: byte
-            minLength: 1
+            format: binary
+            minLength: 0
             maxLength: 9999
 
         upload_datetime:
           description: the date of the uploation of the Photo
           format: date-time
-          example: 13/2/2024, 17:23:16
+          example: 2017-07-21T17:32:28Z
         likes:
           description: numbers of likes
           type: integer
@@ -373,6 +373,10 @@ paths:
                 $ref: "#/components/schemas/User"
         '200':
           description: user log-in seccessfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
         '400': { $ref: "#/components/responses/BadRequestError" }
         '500': { $ref: "#/components/responses/InternalServerError" }            
       
@@ -669,7 +673,7 @@ paths:
         '404': { $ref: "#/components/responses/NotFoundError" }
         '403': { $ref: "#/components/responses/StatusForbidden" }
   
-  /users/{username}/followed/:
+  /users/{username}/follower/:
     parameters: 
       - $ref: "#/components/parameters/username"
       
