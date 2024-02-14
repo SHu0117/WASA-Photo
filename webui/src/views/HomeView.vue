@@ -435,15 +435,13 @@ export default {
 	<div>
 		<div>
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2 my-auto"><strong>Home page - Welcome back to WASA_PHOTO {{ this.username }}</strong></h1>
+				<h1 class="h2 my-auto"><strong>Home page - Welcome back to WASA-PHOTO</strong></h1>
 				<div class="d-flex align-items-center">
 					<!-- Grouped Buttons and Input for Alignment -->
-					<button type="button" class="btn btn-primary mx-1" @click="refresh" style="background-color: #28a745; color: white;">
-						Refresh
-					</button>
-					<button type="button" class="btn btn-primary mx-1" @click="doLogout" style="background-color: #dc3545; color: white;">
-						Logout
-					</button>
+					<i class="fas fa-sync icon-spacing" @click="refresh()" aria-label="Refresh"></i>
+
+					<i class="fas fa-sign-out-alt icon-spacing" @click="doLogout()" aria-label="Logout"></i>
+
 					<input type="text" id="usernameToSearch" v-model="usernameToSearch" class="form-control mx-1" placeholder="Search a user in WASA-PHOTO." style="height:40px;">
 					<button class="btn btn-primary mx-1" type="button" @click="SearchUser">Search</button>
 				</div>
@@ -465,24 +463,42 @@ export default {
 								</button>
 							</div>
 						</div>
-						<div class="profile-infobox">
-							<h2 style="font-size:40px">My Profile</h2>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Username:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openSetUsernameLog()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.username }}</strong></button></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Followers:</strong><span><strong>{{ this.profile.followers }}</strong></span></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Following:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openFollowedLog()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.followed }}</strong></button></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Banned:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openBannedLog()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.banned }}</strong></button></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Photos:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="getPhotos()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.photos }}</strong></button></p>
+						
+						<div class="container py-5">
+							<div class="row align-items-center">
+								<div class="card" style="border-radius: 15px; width:400px;height:150px;">
+									<div class="card-body">
+										<div class="d-flex text-black">										
+											<div class="flex-grow-1 ms-0.5">
+												<h5 class="mb-1" style="font-size:25px;font-weight:bold;">
+													My profile - <strong style="text-decoration:underline">{{ this.profile.username}} </strong>
+													<i class="fas fa-pen" @click="openSetUsernameLog()" aria-label="Edit" style="margin-left:5px;"></i>
+												</h5>
+												<div class="d-flex justify-content-start rounded-3 p-2 mb-2 flwx-gow-1" style="background-color: #efefef;">
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Post</p>
+														<button class="number-button" @click="getPhotos()">{{ this.profile.photos }}</button>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Followers</p>
+														<p class="mb-0" style="font-weight:bold;">{{ this.profile.followers }}</p>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Following</p>
+														<button class="number-button" @click="openFollowedLog()">{{ this.profile.followed }}</button>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Banned</p>
+														<button class="number-button" @click="openBannedLog()">{{ this.profile.banned }}</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
+						  
 						<div class="modal fade" id="setUsernameLogModal" tabindex="-1">
 							<div class="modal-dialog">
 								<div class="modal-content">
@@ -532,7 +548,7 @@ export default {
 					<!-- Photo Content Column -->
 					<div class="col-md-8">
 						<div class="row">
-							<h1 class="h2 my-auto"><strong style="font-size:40px">Here's the stream of photos </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
+							<h1 class="h2 my-auto"><strong style="font-size:40px;font.weight:bold;text-decoration:underline">Photo Stream</strong></h1>
 							<!-- Comments Log Modal -->
 							<div class="modal fade" id="commentsLogModal" tabindex="-1">
 								<div class="modal-dialog">
@@ -547,10 +563,8 @@ export default {
 										<!-- Dynamic comments will be loaded here -->
 										<ul class="list-group custom-margin">
 											<li class="list-group-item" v-for="comment in Comments" :key="comment.id">
-											{{ comment.text }} --- by <strong style="margin-right:5px">{{ comment.username }}</strong>
-											<button v-if="comment.username==this.username" type="button" class="delete-button" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal">
-												<div class="smalltrash icon"></div>
-											</button>
+												{{ comment.text }} --- by <strong style="margin-right:5px">{{ comment.username }}</strong>
+												<i v-if="comment.username==this.username" class="fas fa-trash-alt" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal"></i>
 											</li>
 										</ul>										
 										<p v-if="Comments==null"><strong>This photo has no comment yet!!</strong></p>										
@@ -577,8 +591,8 @@ export default {
 									Uploaded by :  <button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="seeUserProfile(photo.username)" :style="{ borderColor: 'white' }"><strong style="font-size: 20px;color: black">{{ photo.username }}</strong></button>
 								</h5>
 								<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
-								<p class="card-text d-flex align-items-center"><strong>Likes : </strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openLikesLog(photo.username, photo.id)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ photo.likesN }}</strong></button></p>
-								<p class="card-text"><strong>Comments  : </strong><strong style="font-size: 17px;">{{ photo.commentsN }}</strong></p>
+								<p class="card-text d-flex align-items-center"><strong>Likes : </strong><button class="number-button" @click="openLikesLog(photo.username, photo.id)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ photo.likesN }}</strong></button></p>
+								<p class="card-text"><strong>Comments  : </strong><strong style="font-size: 16px;">{{ photo.commentsN }}</strong></p>
 								</div>
 							
 								<!-- Card footer for buttons -->
@@ -606,12 +620,12 @@ export default {
 
 
 <style>
-/* Apply consistent height and styling to all buttons */
+
 .btn {
-    height: 40px; /* Ensure consistent height */
-    padding: 8px 12px; /* Adjust padding as needed */
-    font-size: 1rem; /* Ensure consistent font size */
-    border-radius: 4px; /* Optional: Ensure consistent border radius */
+    height: 40px;
+    padding: 8px 12px;
+    font-size: 1rem; 
+    border-radius: 4px;
 }
 
 .btn-custom {
@@ -643,47 +657,37 @@ export default {
 }
 
 .custom-margin {
-	margin-bottom: 30px; /* or any other value */
+	margin-bottom: 30px; 
 }
 
 .heart-button {
-	background: transparent; /* Ensures no background color */
-	font-size: 40px; /* Adjust size as needed */
+	background: transparent; 
+	font-size: 40px; 
 	cursor: pointer;
-	color: #ccc; /* Default color for unliked state */
+	color: #ccc; 
 }
 
 /* Color change for liked state */
 .heart-button[liked=true], .heart-button.liked {
-color: red; /* Keeps the heart red when liked */
+	color: red; 
 }
 
 .heart-button:hover {
-	color: #ff6666; /* Lighter red on hover, adjust as needed */
+	color: #ff6666; 
+	transition: color 0.3s;
 }
 
-.smalltrash.icon{
-    color: #000;
-    position: relative; /* Use 'relative' so that ':after' is positioned relative to this */
-    display: inline-block;
-    width: 12px;
-    height: 14px;
-    border-left: solid 1px currentColor;
-    border-right: solid 1px currentColor;
-    border-bottom: solid 1px currentColor;
-    border-radius: 0 0 2px 2px;
+.fas.fa-trash{
+	cursor: pointer; 
+	font-size: 20px; 
+	color: black; 
+	transition: color 0.3s ease; 
 }
 
-.smalltrash.icon:after{
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: -3px;
-    width: 12px;
-    height: 2px;
-    background-color: currentColor;
-    border-radius: 2px 2px 0px 0px;
+.fas.fa-trash:hover, .fas.fa-trash-alt:hover {
+color: #dc3545; 
 }
+  
 
 .delete-button {
     background-color: transparent;
@@ -693,6 +697,59 @@ color: red; /* Keeps the heart red when liked */
     align-items: center;
     justify-content: center;
     padding: 5px;
+}
+
+.fas.fa-sign-out-alt {
+	cursor: pointer;
+	font-size: 24px; 
+	color: black; 
+	transition: color 0.3s;
+}
+
+.fas.fa-sign-out-alt:hover {
+	color: #555; 
+}
+
+  
+.fas.fa-sync {
+	cursor: pointer;
+	font-size: 24px;
+	color: black; 
+	transition: color 0.3s;
+}
+
+.fas.fa-sync:hover {
+	color: #555; 
+}
+
+.fas.fa-pen {
+	cursor: pointer; 
+	color: #333; 
+	font-size: 16px;
+}
+
+.fas.fa-pen:hover, .fas.fa-pen:focus {
+color: #007bff; 
+}
+
+.number-button {
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: inherit; /* Match the surrounding text */
+	font-weight: bold; 
+	color: inherit; 
+	cursor: pointer;
+  }
+  
+  .number-button:hover {
+	text-decoration: underline; 
+  }
+  
+
+  
+.icon-spacing {
+  margin: 0 10px; 
 }
 </style>
 

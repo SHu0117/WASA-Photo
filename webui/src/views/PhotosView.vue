@@ -371,16 +371,15 @@ export default {
 	<div>
 		<div>
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2 my-auto"><strong>WASA_PHOTO - Uploaded Photos {{ this.username }}</strong></h1>
+				<h1 class="h2 my-auto"><strong>WASA-PHOTO - Uploaded Photos {{ this.username }}</strong></h1>
 				<div class="d-flex align-items-center">
 					<!-- Grouped Buttons and Input for Alignment -->
-					<button type="button" class="btn btn-primary mx-1" @click="refresh" style="background-color: #28a745; color: white;">
-						Refresh
-					</button>
-					<button type="button" class="btn btn-primary mx-1" @click="doLogout" style="background-color: #dc3545; color: white;">
-						Logout
-					</button>
-					<button class="btn btn-primary mx-1" type="button" @click="backToHomepage()">HOME</button>
+					<i class="fas fa-sync icon-spacing" @click="refresh()" aria-label="Refresh"></i>
+
+					<i class="fas fa-sign-out-alt icon-spacing" @click="doLogout()" aria-label="Logout"></i>
+					
+					<i class="fas fa-home btn-home-icon icon-spacing" @click="backToHomepage()" aria-label="Go to homepage"></i>
+					
 				</div>
 			</div>
 		</div>
@@ -400,22 +399,37 @@ export default {
 								</button>
 							</div>
 						</div>
-						<div class="profile-infobox">
-							<h2 style="font-size:40px">My Profile</h2>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Username:</strong><span><strong>{{ this.profile.username }}</strong></span></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Followers:</strong><span><strong>{{ this.profile.followers }}</strong></span></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Following:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openFollowedLog()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.followed }}</strong></button></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Banned:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openBannedLog()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.banned }}</strong></button></p>
-							</div>
-							<div class="info-row">
-								<p style="font-size:30px"><strong>Photos:</strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="getPhotos()" :style="{ borderColor: 'white' }"><strong style="font-size: 30px;color: black">{{ this.profile.photos }}</strong></button></p>
+						<div class="container py-5">
+							<div class="row align-items-center">
+								<div class="card" style="border-radius: 15px; width:400px;height:150px;">
+									<div class="card-body">
+										<div class="d-flex text-black">										
+											<div class="flex-grow-1 ms-0.5">
+												<h5 class="mb-1" style="font-size:25px;font-weight:bold">
+													My profile - <strong style="text-decoration:underline">{{ this.profile.username}} </strong>
+												</h5>
+												<div class="d-flex justify-content-start rounded-3 p-2 mb-2" style="background-color: #efefef;">
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Post</p>
+														<button class="number-button" @click="getPhotos()">{{ this.profile.photos }}</button>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Followers</p>
+														<p class="mb-0" style="font-weight:bold;">{{ this.profile.followers }}</p>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Following</p>
+														<button class="number-button" @click="openFollowedLog()">{{ this.profile.followed }}</button>
+														</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Banned</p>
+														<button class="number-button" @click="openBannedLog()">{{ this.profile.banned }}</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class="modal fade" id="usersLogModal" tabindex="-1">
@@ -446,7 +460,7 @@ export default {
 					<!-- Photo Content Column -->
 					<div class="col-md-8">
 						<div class="row">
-							<h1 class="h2 my-auto"><strong style="font-size:40px">Here's your photos </strong><span><strong>{{ this.profile.username }}</strong></span></h1>
+							<h1 class="h2 my-auto"><strong style="font-size:40px;font.weight:bold;text-decoration:underline">Uploaded</strong></h1>
 							<!-- Comments Log Modal -->
 							<div class="modal fade" id="commentsLogModal" tabindex="-1">
 								<div class="modal-dialog">
@@ -462,11 +476,8 @@ export default {
 										<ul class="list-group custom-margin">
 											<li class="list-group-item" v-for="comment in Comments" :key="comment.id">
 											    {{ comment.text }} --- by <strong style="margin-right:5px;">{{ comment.username }}</strong>
-												<button v-if="comment.username==this.username" type="button" class="delete-button" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal">
-													<div class="smalltrash icon"></div>
-												</button>
-                        
-											</li>
+												<i v-if="comment.username==this.username" class="fas fa-trash-alt" @click="uncommentPhoto(this.photoUsername, this.photoId, comment.id)" data-bs-dismiss="modal"></i>
+                    						</li>
 										</ul>										
 										<p v-if="Comments==null"><strong>This photo has no comment yet!!</strong></p>										
 									</div>
@@ -492,8 +503,8 @@ export default {
 									<strong>Uploaded by yourself</strong>
 								</h5>
 								<p class="card-text"><strong>Uploaded on : </strong> {{ new Date(photo.uploadtime).toLocaleString() }}</p>
-								<p class="card-text d-flex align-items-center"><strong>Likes : </strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" @click="openLikesLog(photo.username, photo.id)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ photo.likesN }}</strong></button></p>
-								<p class="card-text"><strong>Comments : </strong>{{ photo.commentsN }}</p>
+								<p class="card-text d-flex align-items-center"><strong>Likes : </strong><button class="number-button" @click="openLikesLog(photo.username, photo.id)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ photo.likesN }}</strong></button></p>
+								<p class="card-text"><strong>Comments : </strong><strong style="font-size: 15px;">{{ photo.commentsN }}</strong></p>
 								</div>
 							
 								<!-- Card footer for buttons -->
@@ -524,12 +535,12 @@ export default {
 
 
 <style>
-/* Apply consistent height and styling to all buttons */
+
 .btn {
-    height: 40px; /* Ensure consistent height */
-    padding: 8px 12px; /* Adjust padding as needed */
-    font-size: 1rem; /* Ensure consistent font size */
-    border-radius: 4px; /* Optional: Ensure consistent border radius */
+    height: 40px; 
+    padding: 8px 12px;
+    font-size: 1rem; 
+    border-radius: 4px;
 }
 
 .btn-custom {
@@ -537,54 +548,30 @@ export default {
     margin-right: 5px;
 }
 
-
-
-.profile-infobox {
-    padding: 8px;
-	width: 340px;
-    border-radius: 4px;
-    border: 1px solid #ddd; 
-    background-color: #f8f9fa; /* Light gray background */
-}
-
-.profile-infobox .info-row p {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.profile-infobox .info-row p strong {
-    margin-right: 0.5rem;
-}
-
-.profile-infobox .info-row p span {
-    margin-left: auto;
-}
-
 .custom-margin {
 	margin-bottom: 30px; /* or any other value */
 }
 
 .heart-button {
-	background: transparent; /* Ensures no background color */
+	background: transparent;
 	border: none;
-	font-size: 40px; /* Adjust size as needed */
+	font-size: 40px; 
 	cursor: pointer;
-	color: #ccc; /* Default color for unliked state */
+	color: #ccc; 
 }
 
 /* Color change for liked state */
 .heart-button[liked=true], .heart-button.liked {
-color: red; /* Keeps the heart red when liked */
+color: red; 
 }
 
 .heart-button:hover {
-	color: #ff6666; /* Lighter red on hover, adjust as needed */
+	color: #ff6666;
 }
 
 .trash.icon{
     color: #000;
-    position: relative; /* Use 'relative' so that ':after' is positioned relative to this */
+    position: relative;
     display: inline-block;
     width: 18px;
     height: 20px;
@@ -607,7 +594,7 @@ color: red; /* Keeps the heart red when liked */
 
 .smalltrash.icon{
     color: #000;
-    position: relative; /* Use 'relative' so that ':after' is positioned relative to this */
+    position: relative;
     display: inline-block;
     width: 12px;
     height: 14px;
@@ -639,10 +626,48 @@ color: red; /* Keeps the heart red when liked */
 }
 
 .heart-button, .delete-button {
-	width: 40px;  /* Adjust to your preference */
-	height: 40px;  /* Adjust to your preference */
+	width: 40px;  
+	height: 40px;  
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
-  }
+}
+
+.btn-home-icon {
+	cursor: pointer; 
+	font-size: 30px; 
+	color: black; 
+	transition: color 0.3s ease;
+}
+
+.btn-home-icon:hover {
+color: #555; /* Darken the icon on hover */
+}
+
+.fas.fa-sign-out-alt {
+	cursor: pointer;
+	font-size: 24px; 
+	color: black; 
+	transition: color 0.3s;
+}
+
+.fas.fa-sign-out-alt:hover {
+	color: #555; /* Darken the icon on hover for feedback */
+}
+
+  /* Refresh icon button styling */
+.fas.fa-sync {
+	cursor: pointer;
+	font-size: 24px;
+	color: black; 
+	transition: color 0.3s;
+}
+
+.fas.fa-sync:hover {
+	color: #555; /* Darken the icon on hover for feedback */
+}
+.icon-spacing {
+  margin: 0 10px; 
+}
+  
 </style>
