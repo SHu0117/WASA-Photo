@@ -668,6 +668,36 @@ paths:
         '500': { $ref: "#/components/responses/InternalServerError" }
         '404': { $ref: "#/components/responses/NotFoundError" }
         '403': { $ref: "#/components/responses/StatusForbidden" }
+  
+  /users/{username}/followed/:
+    parameters: 
+      - $ref: "#/components/parameters/username"
+      
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - user
+      operationId: listFollower
+      summary: get user's follow list
+      description: |
+          getting all followers of this user, user objects will be returned
+      responses:
+        '200':
+          description: follow list of the user retrieved
+          content:
+            application/json:
+              schema:
+                description: array og users that the user is following
+                type: array
+                items: { $ref: "#/components/schemas/User"}
+                minItems: 0
+                maxItems: 99999
+        '401': { $ref: "#/components/responses/UnauthorizedStatus" }
+        '400': { $ref: "#/components/responses/BadRequestError" }
+        '500': { $ref: "#/components/responses/InternalServerError" }
+        '404': { $ref: "#/components/responses/NotFoundError" }
+        '403': { $ref: "#/components/responses/StatusForbidden" }
         
   /users/{username}/following/{followUsername}: 
     parameters:

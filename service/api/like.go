@@ -149,7 +149,7 @@ func (rt *_router) getPhotoLikes(w http.ResponseWriter, r *http.Request, ps http
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	dblist, err := rt.db.ListLikes(uint64(photoId))
+	dblist, err := rt.db.ListLikes(uint64(photoId), requesterID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")
 		w.WriteHeader(http.StatusInternalServerError)

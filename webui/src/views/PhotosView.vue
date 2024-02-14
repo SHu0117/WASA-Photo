@@ -253,6 +253,26 @@ export default {
 				}
 			}
 		},
+		async openFollowerLog() {
+			try {
+				let response = await this.$axios.get("/users/" + this.username + "/follower/", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.users = response.data;
+				var myModal = new bootstrap.Modal(document.getElementById('usersLogModal'));
+    			myModal.show();
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
 		async openBannedLog() {
 			try {
 				let response = await this.$axios.get("/users/" + this.username + "/banned/", {
@@ -415,7 +435,7 @@ export default {
 													</div>
 													<div class="px-3">
 														<p class="text-muted mb-1" style="font-weight:bold;">Followers</p>
-														<p class="mb-0" style="font-weight:bold;">{{ this.profile.followers }}</p>
+														<button class="number-button" @click="openFollowerLog()">{{ this.profile.followers }}</button>
 													</div>
 													<div class="px-3">
 														<p class="text-muted mb-1" style="font-weight:bold;">Following</p>

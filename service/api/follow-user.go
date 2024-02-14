@@ -164,7 +164,51 @@ func (rt *_router) listFollowed(w http.ResponseWriter, r *http.Request, ps httpr
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	dblist, err := rt.db.ListFollowed(dbuser)
+	dblist, err := rt.db.ListFollowed(dbuser, requesterID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	list = dblist
+	// set the header and return output
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error while encoding data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (rt *_router) listFollower(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	var list []database.User
+	pathUsername := ps.ByName("username")
+	dbuser, err := rt.db.GetUserID(pathUsername)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	requesterID := getToken(r.Header.Get("Authorization"))
+	err = rt.db.ExistUID(requesterID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	beingBanned, err := rt.db.CheckBeingBanned(dbuser, requesterID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("can't get list")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if beingBanned {
+		ctx.Logger.WithError(err).Error("can't get list, you have been banned by the user")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	dblist, err := rt.db.ListFollower(dbuser, requesterID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("can't get list")
 		w.WriteHeader(http.StatusInternalServerError)

@@ -36,9 +36,11 @@ func (db *appdbimpl) UnlikePhoto(pid uint64, uid uint64) error {
 	return nil
 }
 
-func (db *appdbimpl) ListLikes(pid uint64) ([]User, error) {
+func (db *appdbimpl) ListLikes(pid uint64, requesterID uint64) ([]User, error) {
 
-	rows, err := db.c.Query("SELECT u.id, u.username FROM user u, photos p, like l WHERE u.id = l.user_id AND p.id = ? AND p.id = l.photo_id", pid)
+	rows, err := db.c.Query(`SELECT u.id, u.username FROM user u, photos p, like l 
+							WHERE u.id = l.user_id AND p.id = ? AND p.id = l.photo_id AND u.id NOT IN (SELECT Banner_id
+								FROM banning WHERE Banned_id = ?)`, pid, requesterID)
 	if err != nil {
 		return nil, rows.Err()
 	}

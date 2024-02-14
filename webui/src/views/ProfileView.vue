@@ -138,6 +138,37 @@ export default {
         async backToHomepage() {
 			this.$router.push({ path: '/homepage' }) 		
 		},
+		async seeUserProfile(username) {
+			try {
+				let response1 = await this.$axios.get("users/" + username + "/profile", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.profile = response1.data
+				let response2 = await this.$axios.get("users/" + username + "/photos/", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.Stream = response2.data ?? []
+				for (let i = 0; i < this.Stream.length; i++) {
+					this.Stream[i].file = 'data:image/*;base64,' + this.Stream[i].file
+				}
+				this.$router.push({ path: '/users/' + username + '/profile' })
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+					this.detailedmsg = null;
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "No one found";
+				} else if (e.response && e.response.status === 403) {
+						this.errormsg = "Ops, cant's get the user profile, you've been banned by the user!";
+				}else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
 		async commentPhoto(username, Photo_id) {
 			if (this.commentText === "") {
 				this.errormsg = "Emtpy comment is not valid."
@@ -195,6 +226,46 @@ export default {
 				this.photoUsername = username;
 				this.photoId = Photo_id;
 				var myModal = new bootstrap.Modal(document.getElementById('commentsLogModal'));
+    			myModal.show();
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+		async openFollowedLog() {
+			try {
+				let response = await this.$axios.get("/users/" + this.$route.params.username + "/following/", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.users = response.data;
+				var myModal = new bootstrap.Modal(document.getElementById('usersLogModal'));
+    			myModal.show();
+			} catch (e) {
+				if (e.response && e.response.status === 400) {
+					this.errormsg = "Form error, please try again.";
+				} else if (e.response && e.response.status === 500) {
+					this.errormsg = "An internal error occurred. Please try again later.";
+				} else {
+					this.errormsg = e.toString();
+				}
+			}
+		},
+		async openFollowerLog() {
+			try {
+				let response = await this.$axios.get("/users/" + this.$route.params.username + "/follower/", {
+					headers: {
+						Authorization: "Bearer " + localStorage.getItem("requesterID")
+					}
+				})
+				this.users = response.data;
+				var myModal = new bootstrap.Modal(document.getElementById('usersLogModal'));
     			myModal.show();
 			} catch (e) {
 				if (e.response && e.response.status === 400) {
@@ -392,24 +463,19 @@ export default {
 												<h5 class="mb-1" style="font-size:25px; font-weight:bold;">
 													Visiting - <strong style="text-decoration:underline">{{ this.profile.username}} </strong>													
 												</h5>
-												<div class="d-flex justify-content-start rounded-3 p-2 mb-2"
-												style="background-color: #efefef;">
-												<div class="px-3">
-													<p class="small text-muted mb-1" style="font-weight:bold;">Post</p>
-													<p class="mb-0" style="font-weight:bold;">{{ this.profile.photos }}</p>
-												</div>
-												<div class="px-3">
-													<p class="small text-muted mb-1" style="font-weight:bold;">Followers</p>
-													<p class="mb-0" style="font-weight:bold;">{{ this.profile.followers }}</p>
-												</div>
-												<div class="px-3">
-													<p class="small text-muted mb-1" style="font-weight:bold;">Following</p>
-													<p class="mb-0" style="font-weight:bold;">{{ this.profile.followed }}</p>
+												<div class="d-flex justify-content-start rounded-3 p-2 mb-2" style="background-color: #efefef;">
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Post</p>
+														<button class="number-button" @click="getPhotos()">{{ this.profile.photos }}</button>
 													</div>
-												<div class="px-3">
-													<p class="small text-muted mb-1" style="font-weight:bold;">Banned</p>
-													<p class="mb-0" style="font-weight:bold;">{{ this.profile.banned }}</p>
-												</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Followers</p>
+														<button class="number-button" @click="openFollowerLog()">{{ this.profile.followers }}</button>
+													</div>
+													<div class="px-3">
+														<p class="text-muted mb-1" style="font-weight:bold;">Following</p>
+														<button class="number-button" @click="openFollowedLog()">{{ this.profile.followed }}</button>
+													</div>
 												</div>
 												<div class="d-flex pt-1">
 													<button type="button" v-if="profile.isBanned==true" class="btn btn-custom btn-outline-primary me-1" @click="unbanUser()">Unban</button>
@@ -420,6 +486,30 @@ export default {
 											</div>
 										</div>
 									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal fade" id="usersLogModal" tabindex="-1">
+						<div class="modal-dialog">
+							<div class="modal-content">
+								<div class="modal-header">
+								<h5 class="modal-title">Here's the list of users </h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal">
+									<span aria-hidden="true"></span>
+								</button>
+								</div>
+								<div class="modal-body">
+									<ul class="list-group custom-margin">
+										<li class="list-group-item" v-for="user in this.users" :key="user.id">
+											<strong><button type="button" class="btn btn-outline-primary ms-2 d-flex align-items-center" data-bs-dismiss="modal" @click="seeUserProfile(user.username)" :style="{ borderColor: 'white' }"><strong style="color: black">{{ user.username }}</strong></button></strong>
+										</li>
+									</ul>
+									<p v-if="this.users==null" class="align-items-center justify-content-center"><strong style="font-size:20px">No users found</strong></p>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 								</div>
 							</div>
 						</div>

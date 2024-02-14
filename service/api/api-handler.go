@@ -27,6 +27,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/users/:username/following/:followUsername", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:username/following/:followUsername", rt.wrap(rt.unfollowUser))
 	rt.router.GET("/users/:username/following/", rt.wrap(rt.listFollowed))
+	rt.router.GET("/users/:username/follower/", rt.wrap(rt.listFollower))
 
 	rt.router.PUT("/users/:username/banned/:banUsername", rt.wrap(rt.banUser))
 	rt.router.DELETE("/users/:username/banned/:banUsername", rt.wrap(rt.unbanUser))

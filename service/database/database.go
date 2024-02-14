@@ -93,7 +93,8 @@ type AppDatabase interface {
 	ExistUsername(username string) error
 	ExistUID(id uint64) error
 	ExistPhoto(id uint64) error
-	ListFollowed(u User) ([]User, error)
+	ListFollowed(u User, requesterID uint64) ([]User, error)
+	ListFollower(u User, requesterID uint64) ([]User, error)
 	ListBanned(u User) ([]User, error)
 	CheckBeingBanned(user User, requesterID uint64) (bool, error)
 	DeletePhoto(id uint64) error
@@ -103,10 +104,10 @@ type AppDatabase interface {
 	GetUserPhotos(u User, requesterID uint64) ([]Photo, error)
 	LikePhoto(l Like) (Like, error)
 	UnlikePhoto(pid uint64, uid uint64) error
-	ListLikes(pid uint64) ([]User, error)
+	ListLikes(pid uint64, requesterID uint64) ([]User, error)
 	CommentPhoto(c Comment) (Comment, error)
 	UncommentPhoto(pid uint64, uid uint64, cid uint64) error
-	ListComment(pid uint64) ([]Comment, error)
+	ListComment(pid uint64, requesterID uint64) ([]Comment, error)
 	CountFollowed(user User) (int, error)
 	CountPhotos(u User) (int, error)
 	CountFollower(user User) (int, error)

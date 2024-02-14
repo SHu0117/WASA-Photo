@@ -36,9 +36,11 @@ func (db *appdbimpl) UncommentPhoto(pid uint64, uid uint64, cid uint64) error {
 	return nil
 }
 
-func (db *appdbimpl) ListComment(pid uint64) ([]Comment, error) {
+func (db *appdbimpl) ListComment(pid uint64, requesterID uint64) ([]Comment, error) {
 
-	rows, err := db.c.Query("SELECT c.id, c.user_id, u.username, c.photo_id, p.user_id, c.texts  FROM photos p, comment c, user u WHERE p.id = ? AND p.id = c.photo_id AND c.user_id = u.id", pid)
+	rows, err := db.c.Query(`SELECT c.id, c.user_id, u.username, c.photo_id, p.user_id, c.texts  FROM photos p, comment c, user u 
+				WHERE p.id = ? AND p.id = c.photo_id AND c.user_id = u.id AND c.user_id NOT IN (SELECT Banner_id
+					FROM banning WHERE Banned_id = ?)`, pid, requesterID)
 	if err != nil {
 		return nil, rows.Err()
 	}
