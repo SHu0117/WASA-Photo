@@ -145,11 +145,30 @@ components:
           format: int64
           readOnly: true
           example: 1
+        uid:
+          description: the id of the user that uploadeded the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+          
+        username:
+          description: the username of the user that uploaded the photo
+          type: string
+          pattern: '^.*?$'
+          minLength: 3
+          maxLength: 16
+        file: 
+            description: Base64 encoded string of file
+            type: string
+            format: byte
+            minLength: 1
+            maxLength: 9999
 
         upload_datetime:
           description: the date of the uploation of the Photo
           format: date-time
-          example: 17/01/2022 12:20
+          example: 13/2/2024, 17:23:16
         likes:
           description: numbers of likes
           type: integer
@@ -158,6 +177,10 @@ components:
           description: number of comments
           type: integer
           example: 117
+        isLiked:
+          description: boolean variable to verify if the photo is already liked
+          type: boolean
+          example: false
     
     Comment:
       title: Comment
@@ -169,12 +192,34 @@ components:
           type: integer
           format: int64
           example: 999
+        
+        uid:
+          description: the id of the user that commented the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+          
         username:
           description: the username of the user that commented
           type: string
           pattern: '^.*?$'
           minLength: 3
           maxLength: 16
+        
+        pid:
+          description: the identifier of the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        puid:
+          description: the id of the user that uploaded the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1 
+          
         text:
           description: the text of the comment
           type: string
@@ -192,13 +237,25 @@ components:
           type: integer
           format: int64
           example: 999
-        username:
-          description: the username of the user that liked the photo
-          type: string
-          pattern: '^.*?$'
-          example: Leo
-          minLength: 3
-          maxLength: 16
+        uid:
+          description: the id of the user that liked the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        pid:
+          description: the identifier of the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        puid:
+          description: the id of the user that uploaded the photo
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1  
+        
           
             
     
@@ -207,6 +264,12 @@ components:
       description: represents the user profile
       type: object
       properties:
+        uid:
+          description: the id of the user
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
         username:
           description: username for users
           type: string
@@ -226,6 +289,18 @@ components:
           description: number of other users followed by the user
           type: integer
           example: 1
+        n_banned:
+          description: number of user banned by the user
+          type: integer
+          example: 1
+        isFollowed:
+          description: boolean variable to verify if the user is already followed
+          type: boolean
+          example: false
+        isBanned:
+          description: boolean variable to verify if the photo is already banned
+          type: boolean
+          example: false
     
     Follow:
       title: Follow 

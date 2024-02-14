@@ -101,7 +101,6 @@ type AppDatabase interface {
 	GetUsername(id uint64) (User, error)
 	GetMyStream(u User) ([]Photo, error)
 	GetUserPhotos(u User, requesterID uint64) ([]Photo, error)
-	// GetPhoto(pid uint64) (Photo, error)
 	LikePhoto(l Like) (Like, error)
 	UnlikePhoto(pid uint64, uid uint64) error
 	ListLikes(pid uint64) ([]User, error)
